@@ -1,6 +1,20 @@
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, View } from "lucide-react";
 import { ROUTES } from "../../../constants/Routes";
+import TableEmpty from "../table/TableEmpty";
+import { renderNameEmail } from "../../../utils/addedBy";
+import {
+  dashboardTableCardClass,
+  dashboardTableCellClass,
+  dashboardTableClass,
+  dashboardTableHeadCellClass,
+  dashboardTableHeadClass,
+  dashboardTableHeaderClass,
+  dashboardTablePrimaryCellClass,
+  dashboardTableRowClass,
+  dashboardTableViewAllButtonClass,
+  tableActionButtonClass,
+} from "../table/themeClasses";
 
 type Props = {
   bills: any[];
@@ -17,14 +31,15 @@ const BillRecentTable = ({ bills = [], currentUserRole }: Props) => {
     .sort((a: any, b: any) => new Date(b?.createdAt || 0).getTime() - new Date(a?.createdAt || 0).getTime())
     .slice(0, 3);
 
+
   return (
-    <div className="app-table-card min-w-0 rounded-2xl border border-[#d7e1f0] bg-white">
-      <div className="flex items-center justify-between border-b border-[#e6ecf7] px-6 py-4">
-        <h2 className="text-lg font-medium text-[#1f2f4f]">Bills</h2>
+    <div className={`${dashboardTableCardClass} my-8`}>
+      <div className={dashboardTableHeaderClass}>
+        <h2 className="text-lg font-semibold text-[#2d4620]">Bills</h2>
 
         <button
           onClick={() => navigate(ROUTES.BILL.GET_BILLS)}
-          className="flex items-center gap-2 text-sm text-[#2f55d4] transition hover:text-[#274bc0]"
+          className={dashboardTableViewAllButtonClass}
         >
           View All
           <ArrowRight size={16} />
@@ -32,31 +47,31 @@ const BillRecentTable = ({ bills = [], currentUserRole }: Props) => {
       </div>
 
       <div className="app-table-scroll overflow-x-auto [touch-action:pan-x]">
-        <table className="app-data-table w-max min-w-[1300px] text-left text-sm text-[#3e5175]">
-          <thead>
+        <table className={`${dashboardTableClass} min-w-[1300px]`}>
+          <thead className={dashboardTableHeadClass}>
             <tr>
-              <th className="px-6 py-4">SR No</th>
-              <th className="px-6 py-4">Status</th>
-              <th className="px-6 py-4">Bill Number</th>
-              <th className="px-6 py-4">Supplier</th>
-              <th className="px-6 py-4">Company</th>
-              <th className="px-6 py-4">Date</th>
-              <th className="px-6 py-4">Total GST</th>
-              <th className="px-6 py-4">Items</th>
-              {isAdmin && <th className="px-6 py-4">Created By</th>}
-              <th className="px-6 py-4">Sub Total</th>
-              <th className="px-6 py-4">Grand Total</th>
-              <th className="px-6 py-4 text-center">View Invoice</th>
+              <th className={dashboardTableHeadCellClass}>SR No</th>
+              <th className={dashboardTableHeadCellClass}>Status</th>
+              <th className={dashboardTableHeadCellClass}>Bill Number</th>
+              <th className={dashboardTableHeadCellClass}>Supplier</th>
+              <th className={dashboardTableHeadCellClass}>Company</th>
+              <th className={dashboardTableHeadCellClass}>Date</th>
+              <th className={dashboardTableHeadCellClass}>Total GST</th>
+              <th className={dashboardTableHeadCellClass}>Items</th>
+              {isAdmin && <th className={dashboardTableHeadCellClass}>Created By</th>}
+              <th className={dashboardTableHeadCellClass}>Sub Total</th>
+              <th className={dashboardTableHeadCellClass}>Grand Total</th>
+              <th className={`${dashboardTableHeadCellClass} text-center`}>View Invoice</th>
             </tr>
           </thead>
 
           <tbody>
             {recentBills.length > 0 ? (
               recentBills.map((bill: any, index: number) => (
-                <tr key={bill._id}>
-                  <td className="px-6 py-4">{index + 1}</td>
+                <tr key={bill._id} className={dashboardTableRowClass}>
+                  <td className={dashboardTableCellClass}>{index + 1}</td>
 
-                  <td className="px-6 py-4">
+                  <td className={dashboardTableCellClass}>
                     <span
                       className={`rounded px-2 py-1 text-xs ${
                         bill.billStatus === "Paid"
@@ -68,44 +83,34 @@ const BillRecentTable = ({ bills = [], currentUserRole }: Props) => {
                     </span>
                   </td>
 
-                  <td className="px-6 py-4">{bill.billNumber}</td>
+                  <td className={dashboardTablePrimaryCellClass}>{bill.billNumber}</td>
 
-                  <td className="px-6 py-4">
-                    {bill.items?.[0]?.productName || "-"}
+                  <td className={dashboardTableCellClass}>{bill.items?.[0]?.name || "-"}</td>
+
+                  <td className={dashboardTableCellClass}>{bill.items?.[0]?.company?.name || "-"}</td>
+
+                  <td className={dashboardTableCellClass}>
+                    {bill.createdAt ? new Date(bill.createdAt).toLocaleDateString() : "-"}
                   </td>
 
-                  <td className="px-6 py-4">
-                    {bill.items?.[0]?.company?.companyName || "-"}
-                  </td>
+                  <td className={dashboardTableCellClass}>Rs {bill.totalGST}</td>
 
-                  <td className="px-6 py-4">
-                    {bill.createdAt
-                      ? new Date(bill.createdAt).toLocaleDateString()
-                      : "-"}
-                  </td>
-
-                  <td className="px-6 py-4">Rs {bill.totalGST}</td>
-
-                  <td className="px-6 py-4">{bill.items?.length}</td>
+                  <td className={dashboardTableCellClass}>{bill.items?.length}</td>
 
                   {isAdmin && (
-                    <td className="px-6 py-4 text-[#7180a0]">
-                      {bill.user?.name || "-"} <br />
-                      {bill.user?.email || ""}
+                    <td className={`${dashboardTableCellClass} !text-[#6d8060]`}>
+                      {renderNameEmail(
+                        bill.userId && typeof bill.userId === "object" ? bill.userId.name : undefined,
+                        bill.userId && typeof bill.userId === "object" ? bill.userId.email : undefined
+                      )}
                     </td>
                   )}
+                  <td className={`${dashboardTableCellClass} !font-semibold !text-[#3a592b]`}>Rs {Number(bill.subTotal).toFixed(2)}</td>
+                  <td className={`${dashboardTableCellClass} !font-semibold !text-[#3a592b]`}>Rs {Number(bill.grandTotal).toFixed(2)}</td>
 
-                  <td className="px-6 py-4 font-semibold text-[#2f55d4]">
-                    Rs {bill.subTotal}
-                  </td>
-
-                  <td className="px-6 py-4 font-semibold text-[#15803d]">
-                    Rs {bill.grandTotal}
-                  </td>
-
-                  <td className="px-6 py-4 text-center">
+                  <td className={`${dashboardTableCellClass} text-center`}>
                     <button
-                      className="rounded-lg border border-[#d7e1f0] p-2 text-[#2f55d4] transition hover:bg-[#edf3ff]"
+                      className={`${tableActionButtonClass} !mx-auto`}
                       onClick={() => navigate(ROUTES.BILL.VIEW_INVOICE.replace(":id", bill._id))}
                     >
                       <View size={16} />
@@ -115,11 +120,8 @@ const BillRecentTable = ({ bills = [], currentUserRole }: Props) => {
               ))
             ) : (
               <tr>
-                <td
-                  colSpan={isAdmin ? 12 : 11}
-                  className="py-6 text-center text-[#7180a0]"
-                >
-                  No Recent Bills
+                <td colSpan={isAdmin ? 12 : 11} className="py-6">
+                  <TableEmpty description="No Recent Bills Found" />
                 </td>
               </tr>
             )}

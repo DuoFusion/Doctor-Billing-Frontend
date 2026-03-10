@@ -2,7 +2,7 @@ import ResetForgetPasswordForm from "../../components/auth/ResetForgetPasswordFo
 
 const ResetForgetPassword = () => {
   return (
-    <div className="h-screen">
+    <div className="min-h-screen">
         <ResetForgetPasswordForm />
     </div>
   )

@@ -1,6 +1,5 @@
 export const ROUTES = {
   AUTH: {
-    SIGNUP: "/",
     SIGNIN: "/auth/signin",
     VERIFY_OTP: "/auth/verify-otp",
     FORGET_PASSWORD: "/resetForgetPassword" ,
@@ -30,7 +29,8 @@ export const ROUTES = {
   COMPANY:{
     GET_COMPANY :  "/company",
     ADD_COMPANY : "/add-company",
-    UPDATE_COMPANY: "/update-company/:id" 
+    UPDATE_COMPANY: "/update-company/:id",
+    VIEW_COMPANY: "/company/:id/view",
   },
 
   BILL: {
@@ -43,6 +43,13 @@ export const ROUTES = {
   CATEGORY: {
     GET_CATEGORIES: "/categories",
     ADD_CATEGORY: "/add-category",
+  },
+
+  MEDICAL_STORE: {
+    GET_MEDICAL_STORES: "/medical-store",
+    ADD_MEDICAL_STORE: "/add-medical-store",
+    UPDATE_MEDICAL_STORE: "/update-medical-store/:id",
+    VIEW_MEDICAL_STORE: "/medical-store/:id/view",
   },
 
   NOT_FOUND: "*",

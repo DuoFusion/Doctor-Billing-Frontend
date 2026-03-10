@@ -1,0 +1,149 @@
+.ant-modal-content {
+  box-shadow: none !important;
+  border: 1px solid #d9e7c8;
+}
+
+.ant-modal-mask {
+  background: rgba(45, 70, 32, 0.22) !important;
+  backdrop-filter: blur(4px);
+}
+
+.app-confirm-modal .ant-modal-content {
+  background: #fefffc !important;
+  border: 1px solid #d9e7c8 !important;
+  border-radius: 16px !important;
+  padding: 12px !important;
+}
+
+.app-confirm-modal .ant-modal-header {
+  background: transparent !important;
+}
+
+.app-confirm-modal .ant-modal-title {
+  color: #2d4620 !important;
+  font-weight: 600 !important;
+}
+
+.app-confirm-modal .ant-modal-confirm-content {
+  color: #6d8060 !important;
+  margin-inline-start: 0 !important;
+  max-width: 100% !important;
+}
+
+.app-confirm-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.app-confirm-heading-text {
+  color: #2d4620;
+  font-size: 26px;
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+.app-confirm-content {
+  margin: 6px 0 4px;
+  font-size: 16px;
+  color: #6d8060;
+  line-height: 1.5;
+}
+
+.confirm-cartoon-icon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 999px;
+  color: #ffffff;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.confirm-cartoon-icon::before,
+.confirm-cartoon-icon::after {
+  content: "";
+  position: absolute;
+  top: 17px;
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.confirm-cartoon-icon::before {
+  left: 16px;
+}
+
+.confirm-cartoon-icon::after {
+  right: 16px;
+}
+
+.confirm-cartoon-danger {
+  background: radial-gradient(circle at 30% 25%, #ff8fab 0%, #f43f5e 62%, #be123c 100%);
+}
+
+.confirm-cartoon-neutral {
+  background: radial-gradient(circle at 30% 25%, #93c574 0%, #6f9554 62%, #4f6841 100%);
+}
+
+.confirm-cartoon-badge {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  width: 18px;
+  height: 18px;
+  font-size: 14px;
+  color: #f59e0b;
+  background: #ffffff;
+  border-radius: 999px;
+}
+
+.app-confirm-modal .ant-modal-confirm-btns .ant-btn-default {
+  min-width: 94px !important;
+  height: 40px !important;
+  border-radius: 10px !important;
+  border-color: #cfe4b7 !important;
+  color: #4f6841 !important;
+  background: #f7fde8 !important;
+}
+
+.app-confirm-modal .ant-modal-confirm-btns .ant-btn-dangerous {
+  min-width: 110px !important;
+  height: 40px !important;
+  border-radius: 10px !important;
+  background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%) !important;
+  border-color: #ef4444 !important;
+  color: #fff !important;
+}
+
+.app-confirm-modal .ant-modal-confirm-btns .ant-btn-primary:not(.ant-btn-dangerous) {
+  min-width: 110px !important;
+  height: 40px !important;
+  border-radius: 10px !important;
+  border-color: #6f9554 !important;
+  background: linear-gradient(180deg, #81ab63 0%, #6f9554 100%) !important;
+  color: #ffffff !important;
+}
+
+.app-confirm-active-status-modal .ant-modal-content {
+  border: 1px solid #d9e7c8 !important;
+  border-radius: 16px !important;
+  background: #fefffc !important;
+}
+
+.app-confirm-active-status-modal .ant-btn-default {
+  border-color: #cfe4b7 !important;
+  color: #4f6841 !important;
+  background: #f7fde8 !important;
+}
+
+.app-confirm-active-status-modal .ant-btn-default:hover {
+  border-color: #b8d69a !important;
+  color: #3a592b !important;
+  background: #ebffd8 !important;
+}
+

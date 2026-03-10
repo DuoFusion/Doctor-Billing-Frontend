@@ -12,6 +12,7 @@ const open = (type: "success" | "error" | "warning" | "info", content: string, d
     type,
     content,
     duration,
+    className: `app-notify app-notify-${type}`,
   });
 };
 

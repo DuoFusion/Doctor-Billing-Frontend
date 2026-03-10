@@ -1,12 +1,7 @@
-import Layout from "./layout/Layout";
+import AllRoute from "./routers/AllRoute";
 
 const App = () => {
-
-  return (
-    <div className="min-h-screen">
-      <Layout />
-    </div>
-  );
+  return <AllRoute />;
 };
 
 export default App;

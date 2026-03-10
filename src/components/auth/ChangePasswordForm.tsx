@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { changeUserPassword } from "../../api/authApi";
+import { changeUserPassword } from "../../api";
 import { ROUTES } from "../../constants/Routes";
 import { Button, Card, Form, Input, Typography } from "antd";
 import { VALIDATION_MESSAGES } from "../../constants/validation";
@@ -51,11 +51,11 @@ const ChangePasswordForm = () => {
 
   return (
     <div className="app-form-page px-4 py-8">
-      <Card className="app-form-card !mx-auto !max-w-lg !rounded-2xl !border-[#d7e1f0] !bg-white" style={{ boxShadow: "none" }}>
-        <Typography.Title level={4} className="!mb-1 !text-center !text-[#1f2f4f]">
+      <Card className="app-form-card !mx-auto !max-w-lg !rounded-2xl !border-[#d9e7c8] !bg-[#fefffc]" style={{ boxShadow: "none" }}>
+        <Typography.Title level={4} className="!mb-1 !text-center !text-[#2d4620]">
           Change Password
         </Typography.Title>
-        <Typography.Text className="!mb-5 !block !text-center !text-[#7483a3]">
+        <Typography.Text className="!mb-5 !block !text-center !text-[#6d8060]">
           Update your account password securely
         </Typography.Text>
 

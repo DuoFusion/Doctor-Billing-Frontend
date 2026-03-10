@@ -1,0 +1,184 @@
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useParams } from "react-router-dom";
+import html2pdf from "html2pdf.js";
+import { getBillById, getAllBills } from "../api";
+import { getCompanyLogoUrl, getSignatureImageUrl } from "../utils/uploadsUrl";
+import type { BillItemRecord, BillRecord, CompanyRecord, MedicalStoreRecord, UserRecord } from "../types";
+
+// ============ Bills by medical store ============
+export const useBills = (medicalStoreId: string, enabled = true) =>
+  useQuery({
+    queryKey: ["bills", "dashboard", medicalStoreId],
+    queryFn: () => getAllBills({ medicalStoreId: medicalStoreId || undefined }),
+    enabled,
+  });
+
+// ============ Normalize bill API response ============
+export const unwrapBillRecord = (value: unknown): BillRecord | null => {
+  if (!value || typeof value !== "object") return value as BillRecord | null;
+
+  if ("_doc" in value && value._doc && typeof value._doc === "object") {
+    return {
+      ...value._doc,
+      ...("items" in value && value.items ? { items: value.items } : {}),
+      ...("userId" in value && value.userId ? { userId: value.userId } : {}),
+      ...("medicalStoreId" in value && value.medicalStoreId ? { medicalStoreId: value.medicalStoreId } : {}),
+    } as BillRecord;
+  }
+
+  return value as BillRecord;
+};
+
+// ============ Bill table added-by name ============
+export const getBillAddedByName = (bill: BillRecord) => {
+  const owner = bill.user || bill.userId;
+  return owner && typeof owner === "object" ? owner.name || "-" : "-";
+};
+
+// ============ Bill table added-by email ============
+export const getBillAddedByEmail = (bill: BillRecord) => {
+  const owner = bill.user || bill.userId;
+  return owner && typeof owner === "object" ? owner.email || "-" : "-";
+};
+
+// ============ Currency formatter for bills ============
+export const toCurrency = (value?: number | string) => `Rs ${(Number(value) || 0).toFixed(2)}`;
+
+// ============ Percent formatter for bill summary ============
+export const formatBillPercent = (value: number) => Number(value.toFixed(2)).toString();
+
+// ============ Date formatter for invoice bill ============
+export const formatBillDate = (value?: string) => {
+  if (!value) return "-";
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return parsed.toLocaleDateString("en-CA");
+};
+
+// ============ Bill invoice/detail hook ============
+export const useBillDetails = () => {
+  const { id } = useParams();
+  const invoiceRef = useRef<HTMLDivElement>(null);
+  const [isSignatureLoadFailed, setIsSignatureLoadFailed] = useState(false);
+
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["singleBill", id],
+    queryFn: () => getBillById(id as string),
+    enabled: !!id,
+  });
+
+  const billRecord = useMemo(
+    () => unwrapBillRecord((data as { bill?: BillRecord; data?: BillRecord })?.bill || (data as { data?: BillRecord })?.data || data),
+    [data]
+  );
+  const company =
+    (billRecord?.company && typeof billRecord.company === "object" ? billRecord.company : null) ||
+    (billRecord?.items?.[0]?.company && typeof billRecord.items[0].company === "object" ? billRecord.items[0].company : null) ||
+    ({} as Partial<CompanyRecord>);
+  const user =
+    (billRecord?.user && typeof billRecord.user === "object" ? billRecord.user : null) ||
+    (billRecord?.userId && typeof billRecord.userId === "object" ? billRecord.userId : null) ||
+    ({} as Partial<UserRecord>);
+  const medicalStore = ((billRecord?.medicalStore && typeof billRecord.medicalStore === "object"
+    ? billRecord.medicalStore
+    : null) ||
+    (billRecord?.medicalStoreId && typeof billRecord.medicalStoreId === "object" ? billRecord.medicalStoreId : null) ||
+    {}) as Partial<MedicalStoreRecord>;
+
+  const companyLogoUrl = getCompanyLogoUrl(company?.logoImage);
+  const signatureImageUrl = getSignatureImageUrl(medicalStore?.signatureImg || user?.signatureImg);
+  const hasSignatureImage = Boolean(signatureImageUrl) && !isSignatureLoadFailed;
+
+  const items = (billRecord?.items || []) as BillItemRecord[];
+  const companyLocation = [company?.city, company?.state, company?.pincode].filter(Boolean).join(", ");
+  const invoiceToAddress = [medicalStore?.address || user?.address, medicalStore?.pincode || user?.pincode, medicalStore?.state || user?.state]
+    .filter(Boolean)
+    .join(", ");
+  const invoiceMedicalName = medicalStore?.name || user?.medicalName || user?.name || "-";
+  const invoicePan = medicalStore?.panNumber || user?.pan || "-";
+  const invoiceGst = medicalStore?.gstNumber || user?.gstin || "-";
+  const totalSGST = items.reduce((sum, item) => sum + (Number(item?.sgst) || 0), 0);
+  const totalCGST = items.reduce((sum, item) => sum + (Number(item?.cgst) || 0), 0);
+  const totalIGST = items.reduce((sum, item) => sum + (Number(item?.igst) || 0), 0);
+  const subTotalValue = Number(billRecord?.subTotal || 0);
+  const sgstPercent = subTotalValue > 0 ? (totalSGST * 100) / subTotalValue : 0;
+  const cgstPercent = subTotalValue > 0 ? (totalCGST * 100) / subTotalValue : 0;
+  const igstPercent = subTotalValue > 0 ? (totalIGST * 100) / subTotalValue : 0;
+
+  useEffect(() => {
+    setIsSignatureLoadFailed(false);
+  }, [signatureImageUrl]);
+
+  const handlePrint = () => window.print();
+
+  const handleDownload = async () => {
+    if (!invoiceRef.current || !billRecord) return;
+
+    const invoiceElement = invoiceRef.current;
+    invoiceElement.classList.add("invoice-export-desktop");
+
+    try {
+      await new Promise<void>((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+      });
+
+      const worker = html2pdf()
+        .set({
+          margin: 0,
+          filename: `Invoice-${billRecord.billNumber}.pdf`,
+          image: { type: "jpeg", quality: 1 },
+          html2canvas: {
+            scale: 2,
+            useCORS: true,
+            backgroundColor: "#ffffff",
+            scrollX: 0,
+            scrollY: 0,
+            windowWidth: 1440,
+          },
+          pagebreak: { mode: ["css"] },
+          jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+        } as any)
+        .from(invoiceElement)
+        .toPdf();
+
+      const pdf = await worker.get("pdf");
+      const totalPages = pdf.internal.getNumberOfPages();
+      for (let page = totalPages; page > 1; page--) {
+        pdf.deletePage(page);
+      }
+
+      await worker.save();
+    } finally {
+      invoiceElement.classList.remove("invoice-export-desktop");
+    }
+  };
+
+  return {
+    invoiceRef,
+    billRecord,
+    items,
+    company,
+    user,
+    medicalStore,
+    companyLocation,
+    invoiceToAddress,
+    invoiceMedicalName,
+    invoicePan,
+    invoiceGst,
+    totalSGST,
+    totalCGST,
+    totalIGST,
+    sgstPercent,
+    cgstPercent,
+    igstPercent,
+    companyLogoUrl,
+    signatureImageUrl,
+    hasSignatureImage,
+    setIsSignatureLoadFailed,
+    isLoading,
+    isError,
+    handlePrint,
+    handleDownload,
+  };
+};

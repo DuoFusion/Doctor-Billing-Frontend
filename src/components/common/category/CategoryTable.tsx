@@ -1,195 +1,248 @@
-import { useEffect, useRef, useState } from "react";
-import { Pencil, Trash2, Plus } from "lucide-react";
-import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getCategoriesByQuery, deleteCategory } from "../../../api/categoryApi";
-import { getCurrentUser } from "../../../api/authApi";
-import AddCategoryForm from "./AddCategoryForm";
-import { useConfirm } from "../confirm/ConfirmProvider";
+import { CheckCircleOutlined, DeleteOutlined, EditOutlined, PlusOutlined, PoweroffOutlined, SearchOutlined, SortAscendingOutlined,} from "@ant-design/icons";
+import { Button, Card, Input, Select, Space, Table, Tabs, Typography } from "antd";
+import type { ColumnsType } from "antd/es/table";
+import { useRef } from "react";
+import { getCategoryAddedByEmail, getCategoryAddedByName, type CategoryRecord, type CategoryStatusTab, useCategoryTable,} from "../../../hooks";
+import { ROUTES } from "../../../constants/Routes";
+import ConfirmActiveStatusModal from "../confirm/ConfirmActiveStatusModal";
 import ServerPaginationControls from "../table/ServerPaginationControls";
-import TableLoader from "../table/TableLoader";
 import TableEmpty from "../table/TableEmpty";
-import { Button, Input, Typography } from "antd";
+import TableLoader from "../table/TableLoader";
+import { formatCreatedAndUpdatedAt } from "../../../utils/createdAndUpdatedDate";
+import { renderNameEmail } from "../../../utils/addedBy";
+import {
+  tableActionButtonClass,
+  tableCardClass,
+  tableHeaderClass,
+  tableInputClass,
+  tablePrimaryButtonClass,
+  tableSelectClass,
+  tableSurfaceClass,
+  tableTabClass,
+  tableToolbarActionWrapClass,
+  tableToolbarFiltersClass,
+  tableToolbarLayoutClass,
+} from "../table/themeClasses";
+
+const categoryStatusTabs = [
+  { key: "active", label: "Active Categories" },
+  { key: "inactive", label: "Inactive Categories" },
+] satisfies Array<{ key: CategoryStatusTab; label: string }>;
+
+const categorySortOptions = [
+  { value: "asc", label: "Added By: A to Z" },
+  { value: "desc", label: "Added By: Z to A" },
+];
 
 const CategoryTable = () => {
-  const queryClient = useQueryClient();
-  const confirm = useConfirm();
-
-  const { data: currentUser } = useQuery({ queryKey: ["currentUser"], queryFn: getCurrentUser });
-  const isAdmin = currentUser?.user?.role === "admin";
-
-  const [searchInput, setSearchInput] = useState("");
-  const [search, setSearch] = useState("");
-  const [showAdd, setShowAdd] = useState(false);
-  const [showEdit, setShowEdit] = useState(false);
-  const [editItem, setEditItem] = useState<{ id: string; name: string } | null>(null);
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
   const formSectionRef = useRef<HTMLDivElement>(null);
+  const {
+    navigate,
+    isAdmin,
+    statusTab,
+    setStatusTab,
+    searchInput,
+    setSearchInput,
+    sortOrder,
+    setSortOrder,
+    selectedMedicalStore,
+    setSelectedMedicalStore,
+    page,
+    setPage,
+    limit,
+    setLimit,
+    pendingStatus,
+    medicalStoreOptions,
+    categories,
+    total,
+    totalPages,
+    isLoading,
+    isStoresLoading,
+    isError,
+    error,
+    isFetching,
+    statusMutation,
+    resolveMedicalStoreName,
+    handleDeleteCategory,
+    closeStatusModal,
+    openStatusModal,
+    applyStatusChange,
+  } = useCategoryTable();
 
-  const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["categories", { page, limit, search }],
-    queryFn: () => getCategoriesByQuery({ page, limit, search, sortBy: "name", order: "asc" }),
-    enabled: !!currentUser,
-    placeholderData: keepPreviousData,
-  });
+  const columns: ColumnsType<CategoryRecord> = [
+    {
+      title: "Sr. No",
+      key: "sr_no",
+      width: 90,
+      render: (_, __, index) => (page - 1) * limit + index + 1,
+    },
+    {
+      title: "Category",
+      dataIndex: "name",
+      key: "name",
+      render: (value: string) => <Typography.Text strong>{value || "-"}</Typography.Text>,
+    },
+    ...(isAdmin
+      ? [
+          {
+            title: "Medical Store Name",
+            key: "medicalStoreName",
+            render: (_: unknown, record: CategoryRecord) => (
+              <Typography.Text>{resolveMedicalStoreName(record.medicalStoreId)}</Typography.Text>
+            ),
+          },
+        ]
+      : []),
+    ...(isAdmin
+      ? [
+          {
+            title: "Added By",
+            key: "addedBy",
+            render: (_: unknown, record: CategoryRecord) =>
+              renderNameEmail(getCategoryAddedByName(record), getCategoryAddedByEmail(record)),
+          },
+        ]
+      : []),
+    {
+      title: "Created / Updated At",
+      key: "createdUpdated",
+      render: (_, record) => formatCreatedAndUpdatedAt(record.createdAt, record.updatedAt),
+    },
+    {
+      title: "Actions",
+      key: "actions",
+      align: "center",
+      width: 170,
+      render: (_, record) => {
+        const active = record.isActive !== false;
+        return (
+          <Space size={10}>
+            <Button
+              type="text"
+              icon={active ? <PoweroffOutlined className="text-orange-600" /> : <CheckCircleOutlined className="text-emerald-600" />}
+              onClick={() => openStatusModal(record)}
+              className={tableActionButtonClass}
+            />
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setSearch(searchInput.trim());
-    }, 400);
-    return () => clearTimeout(timer);
-  }, [searchInput]);
+            <Button
+              type="text"
+              icon={<EditOutlined className="text-[#4f6841]" />}
+              onClick={() => navigate(ROUTES.CATEGORY.ADD_CATEGORY, { state: { id: record._id, name: record.name } })}
+              className={tableActionButtonClass}
+            />
 
-  useEffect(() => {
-    setPage(1);
-  }, [search]);
+            <Button
+              type="text"
+              danger
+              icon={<DeleteOutlined />}
+              onClick={() => handleDeleteCategory(record._id)}
+              className={`${tableActionButtonClass} hover:!border-[#f7caca] hover:!bg-red-50`}
+            />
+          </Space>
+        );
+      },
+    },
+  ];
 
-  useEffect(() => {
-    if ((showAdd || showEdit) && formSectionRef.current) {
-      formSectionRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  }, [showAdd, showEdit]);
+  if (isLoading || isStoresLoading) return <TableLoader tip="Loading categories..." />;
 
-  const categoriesList = data?.data || [];
-  const pagination = data?.pagination || { page: 1, limit, total: 0, totalPages: 0 };
+  if (isError) {
+    const knownError = error as { response?: { data?: { message?: string } }; message?: string };
+    const errorMessage = knownError?.response?.data?.message || knownError?.message || "Something went wrong";
 
-  const { mutate } = useMutation({
-    mutationFn: (payload: { id: string }) => deleteCategory(payload),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["categories"] }),
-  });
-
-  const handleDeleteCategory = async (payload: { id: string }) => {
-    const shouldDelete = await confirm({
-      title: "Delete Category",
-      message: "Are you sure you want to delete this item?",
-      confirmText: "Delete",
-      cancelText: "Cancel",
-      intent: "danger",
-    });
-    if (shouldDelete) mutate(payload);
-  };
-
-  if (isLoading) return <TableLoader tip="Loading categories..." />;
-  if (isError)
     return (
       <Typography.Text type="danger" className="p-6">
-        {(error as any)?.response?.data?.message || "Something went wrong"}
+        {errorMessage}
       </Typography.Text>
     );
+  }
 
   return (
     <div className="space-y-4">
-      <div ref={formSectionRef}>
-        {showAdd && <AddCategoryForm onClose={() => setShowAdd(false)} />}
+      <div ref={formSectionRef} />
 
-        {showEdit && editItem && (
-          <AddCategoryForm
-            initialName={editItem.name}
-            categoryId={editItem.id}
-            onClose={() => {
-              setShowEdit(false);
-              setEditItem(null);
-            }}
-          />
-        )}
-      </div>
-
-      <div className="app-table-card rounded-2xl border border-[#d7e1f0] bg-white">
-        <div className="px-6 py-4">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-lg font-medium text-[#1f2f4f]">Category List</h2>
-
-            <div className="flex flex-wrap items-center gap-3 ps-2">
+      <Card className={tableCardClass}>
+        <div className={tableHeaderClass}>
+          <div className={tableToolbarLayoutClass}>
+            <div className={tableToolbarFiltersClass}>
               <Input
-                placeholder="Search by category..."
                 value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
+                onChange={(event) => setSearchInput(event.target.value)}
                 allowClear
-                className="!w-[230px]"
+                prefix={<SearchOutlined className="text-[#6d8060]" />}
+                placeholder="Search by category name"
+                className={`${tableInputClass} !w-full sm:!w-[280px] lg:!w-[320px]`}
               />
 
-              <Button
-                type="primary"
-                icon={<Plus size={16} />}
-                onClick={() => {
-                  setShowEdit(false);
-                  setEditItem(null);
-                  setShowAdd(true);
-                }}
-                style={{ boxShadow: "none" }}
-              >
+              {isAdmin && (
+                <Select
+                  value={selectedMedicalStore || undefined}
+                  onChange={(value) => setSelectedMedicalStore(value || "")}
+                  options={medicalStoreOptions}
+                  allowClear
+                  showSearch
+                  optionFilterProp="label"
+                  placeholder="Select medical store"
+                  className={`${tableSelectClass} !w-full sm:!w-[260px]`}
+                />
+              )}
+
+              {isAdmin && (
+                <Select
+                  value={sortOrder}
+                  onChange={(value) => setSortOrder(value)}
+                  options={categorySortOptions}
+                  suffixIcon={<SortAscendingOutlined />}
+                  className={`${tableSelectClass} !w-full sm:!w-[210px]`}
+                />
+              )}
+            </div>
+
+            <div className={tableToolbarActionWrapClass}>
+              <Button type="text" icon={<PlusOutlined />} onClick={() => navigate(ROUTES.CATEGORY.ADD_CATEGORY)} className={tablePrimaryButtonClass}>
                 Add Category
               </Button>
             </div>
           </div>
         </div>
 
-        <div className="app-table-scroll overflow-x-auto">
-          <table className="app-data-table min-w-[800px] w-full text-left text-sm text-[#3e5175]">
-            <thead>
-              <tr>
-                <th className="px-6 py-4">Category</th>
-                {isAdmin && <th className="px-6 py-4">Added By</th>}
-                <th className="px-6 py-4 text-center">Actions</th>
-              </tr>
-            </thead>
+        <Tabs activeKey={statusTab} onChange={(key) => setStatusTab(key as CategoryStatusTab)} items={categoryStatusTabs} className={tableTabClass} />
 
-            <tbody>
-              {categoriesList?.length > 0 ? (
-                categoriesList.map((item: any) => (
-                  <tr key={item._id}>
-                    <td className="px-6 py-4">{item.name}</td>
-                    {isAdmin && (
-                      <td className="whitespace-nowrap px-6 py-4 text-[#7180a0]">
-                        Name : {item.userId?.name} <br /> {item.userId?.email}
-                      </td>
-                    )}
-                    <td className="px-6 py-4">
-                      <div className="flex justify-center gap-3">
-                        <button
-                          onClick={() => {
-                            setShowAdd(false);
-                            setEditItem({ id: item._id, name: item.name });
-                            setShowEdit(true);
-                          }}
-                          className="app-action-btn"
-                        >
-                          <Pencil size={16} />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteCategory({ id: item._id })}
-                          className="app-action-btn app-action-danger"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={isAdmin ? 3 : 2} className="py-6">
-                    <TableEmpty description="No Categories Found" />
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+        <Table<CategoryRecord>
+          className={tableSurfaceClass}
+          rowKey="_id"
+          columns={columns}
+          dataSource={categories}
+          loading={isFetching && !isLoading}
+          pagination={false}
+          locale={{ emptyText: <TableEmpty description="No Categories Found" /> }}
+          scroll={{ x: "max-content" }}
+        />
 
         <ServerPaginationControls
-          page={pagination.page}
-          limit={pagination.limit}
-          total={pagination.total}
-          totalPages={pagination.totalPages}
-          currentCount={categoriesList.length}
+          page={page}
+          limit={limit}
+          total={total}
+          totalPages={totalPages}
+          currentCount={categories.length}
           onPageChange={setPage}
           onLimitChange={(nextLimit) => {
             setLimit(nextLimit);
             setPage(1);
           }}
         />
-      </div>
+
+        <ConfirmActiveStatusModal
+          open={pendingStatus.open}
+          nextIsActive={pendingStatus.nextIsActive}
+          countdown={pendingStatus.secondsLeft}
+          subjectName={pendingStatus.category?.name}
+          entityLabel="Category"
+          onCancel={closeStatusModal}
+          onConfirm={applyStatusChange}
+          confirmLoading={statusMutation.isPending}
+        />
+      </Card>
     </div>
   );
 };

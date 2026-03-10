@@ -1,5 +1,8 @@
 import { Pagination, Select, Space, Typography } from "antd";
 
+const ALL_PAGE_SIZE = 2147483647;
+const PAGE_SIZE_OPTIONS = [10, 30, 50, 100];
+
 type ServerPaginationControlsProps = {
   page: number;
   limit: number;
@@ -19,20 +22,31 @@ const ServerPaginationControls = ({
   onPageChange,
   onLimitChange,
 }: ServerPaginationControlsProps) => {
+  const selectValue = limit === ALL_PAGE_SIZE ? "all" : limit;
+
   return (
-    <div className="app-pagination-wrap flex flex-col gap-3 border-t border-[#e6ecf7] px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
-      <Typography.Text className="!text-[#7483a3]">
+    <div className="app-pagination-wrap flex flex-col gap-3 border-t border-[#e3edd9] px-4 py-4 md:flex-row md:items-center md:justify-between">
+      <Typography.Text className="!text-[13px] !text-[#6d8060]">
         Showing {currentCount}/{total} results
       </Typography.Text>
 
-      <Space size={12} wrap>
+      <Space size={10} wrap className="!w-full !justify-between md:!w-auto md:!justify-end">
         <Space size={8}>
-          <Typography.Text className="!text-[#7483a3]">Rows</Typography.Text>
+          <Typography.Text className="!text-[13px] !text-[#6d8060]">Rows</Typography.Text>
           <Select
-            value={limit}
-            onChange={(value) => onLimitChange(value)}
-            options={[5, 10, 20, 50].map((size) => ({ value: size, label: size }))}
-            className="!w-[86px]"
+            value={selectValue}
+            onChange={(value) => {
+              if (value === "all") {
+                onLimitChange(ALL_PAGE_SIZE);
+                return;
+              }
+              onLimitChange(Number(value));
+            }}
+            options={[
+              ...PAGE_SIZE_OPTIONS.map((size) => ({ value: size, label: size })),
+              { value: "all", label: "All" },
+            ]}
+            className="!h-10 !w-[100px] [&_.ant-select-selector]:!h-10 [&_.ant-select-selector]:!rounded-lg [&_.ant-select-selector]:!border-[#cfe4b7] [&_.ant-select-selector]:!bg-[#fefffc] [&_.ant-select-selection-item]:!leading-[38px]"
           />
         </Space>
 
@@ -41,8 +55,10 @@ const ServerPaginationControls = ({
           total={total}
           pageSize={limit}
           showSizeChanger={false}
+          size="small"
+          responsive
           onChange={(nextPage) => onPageChange(nextPage)}
-          className="app-pagination"
+          className="app-pagination !m-0"
         />
       </Space>
     </div>

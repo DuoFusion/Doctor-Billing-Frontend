@@ -1,19 +1,17 @@
-import { Building2, Package, Receipt, Users } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import { getCurrentUser } from "../../../api/authApi";
-import { getAllBills } from "../../../api/billApi";
-import { getAllProducts } from "../../../api/productApi";
-import { getAllCompanies } from "../../../api/companyApi";
-import { getAllUsers } from "../../../api/userApi";
+import { Building2, FolderTree, Package, Receipt, Users } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Select } from "antd";
 import BillRecentTable from "./BillRecentTable";
-import ProductRecentTable from "./ProductRecentTable";
-import CompanyRecentTable from "./CompanyRecentTable";
-import UserRecentTable from "./UserRecentTable";
+import { buildMedicalStoreOptions, useBills, useCurrentUser, useMedicalStores, useDashboardStats } from "../../../hooks";
+import { filterStoresByIds, resolveUserMedicalStoreIds } from "../../../utils/medicalStoreScope";
+
+const dashboardSelectClass =
+  "!h-11 !w-full sm:!w-[260px] [&_.ant-select-selector]:!h-11 [&_.ant-select-selector]:!rounded-lg [&_.ant-select-selection-item]:!leading-[42px] [&_.ant-select-selection-placeholder]:!leading-[42px]";
 
 const MainDashboard = () => {
-  const { data: currentUserData } = useQuery({
-    queryKey: ["currentUser"],
-    queryFn: getCurrentUser,
+  const [selectedMedicalStore, setSelectedMedicalStore] = useState("");
+
+  const { data: currentUserData } = useCurrentUser({
     retry: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
@@ -21,85 +19,93 @@ const MainDashboard = () => {
   });
 
   const role = currentUserData?.user?.role;
-  const { data: billsData } = useQuery({ queryKey: ["bills"], queryFn: getAllBills });
-  const { data: productsData } = useQuery({ queryKey: ["products"], queryFn: getAllProducts });
-  const { data: companiesData } = useQuery({ queryKey: ["companies"], queryFn: getAllCompanies });
-  const { data: usersData } = useQuery({ queryKey: ["users"], queryFn: getAllUsers });
+  const isAdmin = role === "admin";
+
+  const { data: storesData } = useMedicalStores();
+  const stores = storesData?.stores || [];
+
+  const allStoreIds = useMemo(
+    () => stores.map((store) => store._id),
+    [stores]
+  );
+
+  const allowedStoreIds = useMemo(() => {
+    if (isAdmin) return allStoreIds;
+    return resolveUserMedicalStoreIds(currentUserData?.user);
+  }, [isAdmin, currentUserData?.user, allStoreIds]);
+
+  const medicalStoreOptions = useMemo(
+    () => buildMedicalStoreOptions(filterStoresByIds(stores, allowedStoreIds), allowedStoreIds),
+    [stores, allowedStoreIds]
+  );
+
+  useEffect(() => {
+    if (isAdmin) return;
+    if (selectedMedicalStore) return;
+    if (medicalStoreOptions.length === 0) return;
+    setSelectedMedicalStore(medicalStoreOptions[0].value);
+  }, [isAdmin, selectedMedicalStore, medicalStoreOptions]);
+
+  const dashboardMedicalStoreId = isAdmin ? selectedMedicalStore : "";
+  const isDashboardEnabled = Boolean(currentUserData?.user);
+  const { data: billsData } = useBills(dashboardMedicalStoreId, isDashboardEnabled);
+  const { data: statsData } = useDashboardStats(dashboardMedicalStoreId, isDashboardEnabled);
 
   const allBills = billsData?.bills || [];
-  const allProducts = productsData?.products || [];
-  const allCompanies = companiesData?.companies || [];
-  const allUsers = usersData?.users || [];
-
-  const currentUserId = currentUserData?.user?._id;
-
-  const filteredBills = role === "admin" ? allBills : allBills.filter((b: any) => String(b.user?._id || b.user) === String(currentUserId));
-  const filteredProducts = role === "admin" ? allProducts : allProducts.filter((p: any) => String(p.user?._id || p.user) === String(currentUserId));
-  const filteredCompanies = role === "admin" ? allCompanies : allCompanies.filter((c: any) => String(c.user?._id || c.user) === String(currentUserId));
-  const filteredUsers = role === "admin" ? allUsers : [];
-
-  const totalBills = filteredBills.length;
-  const totalProducts = filteredProducts.length;
-  const totalCompanies = filteredCompanies.length;
+  const stats = statsData?.stats || { bills: 0, products: 0, companies: 0, categories: 0, users: 0 };
 
   const cards = [
-    { title: "Total Companies", value: totalCompanies, icon: Building2 },
-    { title: "Total Products", value: totalProducts, icon: Package },
-    { title: "Total Bills", value: totalBills, icon: Receipt },
-    ...(role === "admin" ? [{ title: "Total Users", value: allUsers.length, icon: Users }] : []),
+    { title: "Total Bills", value: stats.bills ?? 0, icon: Receipt },
+    { title: "Total Products", value: stats.products ?? 0, icon: Package },
+    { title: "Total Companies", value: stats.companies ?? 0, icon: Building2 },
+    { title: "Total Categories", value: stats.categories ?? 0, icon: FolderTree },
+    ...(isAdmin ? [{ title: "Total Users", value: stats.users ?? 0, icon: Users }] : []),
   ];
 
-  return (
-    <div className="min-h-[calc(100vh-7rem)] space-y-7 bg-transparent p-3 text-[#233456] sm:p-5 lg:p-6">
-      <div className="rounded-2xl border border-[#d7e1f0] bg-white px-5 py-4 sm:px-6 sm:py-5">
-        <h1 className="text-xl font-semibold text-[#1f2f4f] sm:text-2xl">Dashboard Overview</h1>
-        <p className="mt-1 text-sm text-[#6f7f9e]">Track products, companies, bills, and users in one place.</p>
-      </div>
+  const cardGridClass = isAdmin
+    ? "grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5"
+    : "grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4";
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+  return (
+    <div className="min-h-[calc(100vh-72px)] space-y-6 bg-transparent px-4 py-2 text-[#29483c] sm:px-6">
+      {isAdmin && (
+        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-[#d9e7c8] bg-[#fefffc] p-4">
+          <Select
+            value={selectedMedicalStore || undefined}
+            onChange={(value) => setSelectedMedicalStore(value || "")}
+            options={medicalStoreOptions}
+            allowClear
+            showSearch
+            optionFilterProp="label"
+            placeholder="Select Medical Store"
+            className={dashboardSelectClass}
+          />
+        </div>
+      )}
+
+      <div className={cardGridClass}>
         {cards.map((card, i) => {
           const Icon = card.icon;
           return (
             <div
               key={i}
-              className="rounded-2xl border border-[#d7e1f0] bg-white p-5"
+              className="rounded-2xl border border-[#d9e7c8] bg-[#fefffc] p-5"
             >
               <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-[#5c6d8d]">{card.title}</p>
-                <div className="rounded-lg border border-[#d6e1f5] bg-[#edf3ff] p-2.5 text-[#2f55d4]">
+                <p className="text-sm font-medium text-[#6d8060]">{card.title}</p>
+                <div className="rounded-lg border border-[#cfe4b7] bg-[#ebffd8] p-2.5 text-[#4f6841]">
                   <Icon size={18} />
                 </div>
               </div>
-              <h2 className="mt-4 text-3xl font-semibold text-[#1f2f4f]">{card.value}</h2>
+              <h2 className="mt-4 text-3xl font-semibold text-[#2d4620]">{card.value}</h2>
             </div>
           );
         })}
       </div>
 
-      {role === "admin" ? (
-        <>
-          <div className="grid gap-6 lg:grid-cols-2">
-            <BillRecentTable bills={filteredBills} currentUserRole={role} />
-            <UserRecentTable users={filteredUsers} />
-          </div>
-
-          <div className="grid gap-6 lg:grid-cols-2">
-            <ProductRecentTable products={filteredProducts} currentUserRole={role} />
-            <CompanyRecentTable companies={filteredCompanies} currentUserRole={role} />
-          </div>
-        </>
-      ) : (
-        <>
-          <div className="grid grid-cols-1 gap-6">
-            <BillRecentTable bills={filteredBills} currentUserRole={role} />
-          </div>
-
-          <div className="grid gap-6 lg:grid-cols-2">
-            <ProductRecentTable products={filteredProducts} currentUserRole={role} />
-            <CompanyRecentTable companies={filteredCompanies} currentUserRole={role} />
-          </div>
-        </>
-      )}
+      <div className="grid grid-cols-1 gap-6">
+        <BillRecentTable bills={allBills} currentUserRole={role} />
+      </div>
     </div>
   );
 };

@@ -1,68 +1,101 @@
+import { useEffect, useMemo } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import axios from "axios";
-import { useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { signupUser } from "../../api/authApi";
-import { getUserById, updateUser } from "../../api/userApi";
-import { ROUTES } from "../../constants/Routes";
 import { Button, Card, Col, Form, Input, Row, Select, Typography } from "antd";
-import { VALIDATION_MESSAGES, VALIDATION_REGEX } from "../../constants/validation";
+import axios from "axios";
+import { useNavigate, useParams } from "react-router-dom";
+import { addUser, getUserById, updateUser } from "../../api";
+import { getAllMedicalStoresByQuery, type MedicalStoreRecord } from "../../api/medicalStore";
+import { ROUTES } from "../../constants/Routes";
+import { VALIDATION_REGEX } from "../../constants/validation";
 import { notify } from "../../utils/notify";
 
+//=========== Form Values Interface ============
 interface UserFormValues {
-  firstName: string;
-  lastName: string;
+  name: string;
   email: string;
   password?: string;
-  role: string;
   phone?: string;
-  city?: string;
-  state?: string;
-  pincode?: string;
-  address?: string;
+  medicalStoreId: string;
 }
 
-const splitName = (fullName = "") => {
-  const parts = fullName.trim().split(/\s+/).filter(Boolean);
-  return {
-    firstName: parts[0] || "",
-    lastName: parts.slice(1).join(" "),
-  };
+//=========== Required Label UI ============
+const requiredLabel = (label: string) => (
+  <span className="font-medium text-[#607257']">
+    {label}
+    <span className="ml-1 text-red-500">*</span>
+  </span>
+);
+
+//=========== Input Styling ============
+const inputClass = "!h-11 !rounded-lg";
+
+//=========== Select Styling ============
+const selectClass =
+  "!w-full !h-11 [&_.ant-select-selector]:!h-11 [&_.ant-select-selector]:!rounded-lg [&_.ant-select-selector]:!flex [&_.ant-select-selector]:items-center [&_.ant-select-selection-wrap]:!py-1";
+
+//=========== Convert Store Object to Store ID ============
+const resolveStoreId = (entry: unknown) => {
+  if (!entry) return "";
+  if (typeof entry === "string") return entry;
+  if (typeof entry === "object" && "_id" in (entry as Record<string, unknown>)) {
+    return String((entry as { _id?: string })._id || "");
+  }
+  return "";
 };
 
+//=========== Add / Edit User Form Component ============
 const AddUserForm = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const isEdit = Boolean(id);
   const [form] = Form.useForm<UserFormValues>();
 
+  //=========== Fetch User Data (Edit Mode) ============
   const { data, isLoading } = useQuery({
     queryKey: ["user", id],
     queryFn: () => getUserById(id as string),
     enabled: isEdit,
   });
 
+  //=========== Fetch Medical Stores List ============
+  const { data: storesData, isLoading: isStoresLoading } = useQuery({
+    queryKey: ["medicalStores", "userForm"],
+    queryFn: () => getAllMedicalStoresByQuery({ isActive: true }),
+  });
+
+  //=========== Set Form Values when Editing User ============
   useEffect(() => {
-    if (data?.user && isEdit) {
-      const { firstName, lastName } = splitName(data.user.name || "");
-      form.setFieldsValue({
-        firstName,
-        lastName,
-        email: data.user.email || "",
-        role: data.user.role || "user",
-        phone: data.user.phone || "",
-        city: data.user.city || "",
-        state: data.user.state || "",
-        pincode: data.user.pincode || "",
-        address: data.user.address || "",
-      });
-    } else if (!isEdit) {
-      form.setFieldsValue({ role: "user" });
-    }
+    if (!data || !isEdit) return;
+
+    const user = (data as any).user || data;
+
+    const selectedStoreId =
+      resolveStoreId((user as any).medicalStoreId) ||
+      (Array.isArray((user as any).medicalStoreIds)
+        ? resolveStoreId((user as any).medicalStoreIds[0])
+        : "");
+
+    form.setFieldsValue({
+      name: (user as any).name || "",
+      email: (user as any).email || "",
+      phone: (user as any).phone || "",
+      medicalStoreId: selectedStoreId,
+    });
   }, [data, form, isEdit]);
 
+  //=========== Convert Stores to Select Options ============
+  const storeOptions = useMemo(
+    () =>
+      ((storesData?.stores || []) as MedicalStoreRecord[]).map((store) => ({
+        value: store._id,
+        label: store.name || "Unnamed Medical Store",
+      })),
+    [storesData?.stores]
+  );
+
+  //=========== Add User Mutation ============
   const addMutation = useMutation({
-    mutationFn: signupUser,
+    mutationFn: addUser,
     onSuccess: () => {
       notify.success("User created successfully.");
       setTimeout(() => navigate(ROUTES.ADMIN.MANAGE_USERS), 900);
@@ -76,28 +109,9 @@ const AddUserForm = () => {
     },
   });
 
+  //=========== Update User Mutation ============
   const updateMutation = useMutation({
-    mutationFn: (formData: {
-      id: string;
-      name: string;
-      email: string;
-      role: string;
-      phone?: string;
-      city?: string;
-      state?: string;
-      pincode?: string;
-      address?: string;
-    }) =>
-      updateUser(formData.id, {
-        name: formData.name,
-        email: formData.email,
-        role: formData.role,
-        phone: formData.phone,
-        city: formData.city,
-        state: formData.state,
-        pincode: formData.pincode,
-        address: formData.address,
-      }),
+    mutationFn: (payload: any) => updateUser(id as string, payload),
     onSuccess: () => {
       notify.success("User updated successfully.");
       setTimeout(() => navigate(ROUTES.ADMIN.MANAGE_USERS), 900);
@@ -111,186 +125,164 @@ const AddUserForm = () => {
     },
   });
 
+  //=========== Form Submit Handler ============
   const handleSubmit = (values: UserFormValues) => {
-    const fullName = `${values.firstName || ""} ${values.lastName || ""}`.trim();
-    if (fullName.length < 5) {
-      notify.warning("Name should be at least 5 characters");
-      return;
-    }
-
-    const userPayload = {
-      name: fullName,
+    const payload: any = {
+      name: (values.name || "").trim(),
       email: (values.email || "").trim(),
-      role: values.role,
       phone: (values.phone || "").trim(),
-      city: (values.city || "").trim(),
-      state: (values.state || "").trim(),
-      pincode: (values.pincode || "").trim(),
-      address: (values.address || "").trim(),
+      medicalStoreId: String(values.medicalStoreId || "").trim(),
     };
 
     if (isEdit && id) {
-      updateMutation.mutate({
-        id,
-        ...userPayload,
-      });
-    } else {
-      addMutation.mutate({
-        ...userPayload,
-        password: (values.password || "").trim(),
-      });
+      updateMutation.mutate(payload);
+      return;
     }
+
+    payload.password = (values.password || "").trim();
+    addMutation.mutate(payload);
   };
 
+  //=========== Decide Which Mutation to Use ============
   const mutation = isEdit ? updateMutation : addMutation;
 
+  //=========== Loading UI for Edit Mode ============
   if (isEdit && isLoading) {
     return (
       <div className="flex min-h-[70vh] items-center justify-center">
-        <Typography.Text>Loading...</Typography.Text>
+        <Typography.Text>Loading user details...</Typography.Text>
       </div>
     );
   }
 
+  //=========== Main UI ============
   return (
-    <div className="app-form-page px-4 py-8">
-      <Card className="app-form-card !mx-auto !max-w-4xl !rounded-2xl !border-[#d7e1f0] !bg-white" style={{ boxShadow: "none" }}>
-        <div className="mb-6 flex items-center justify-between gap-3">
-          <Typography.Title level={4} className="!mb-0 !text-[#1f2f4f]">
-            {isEdit ? "Edit User" : "Add New User"}
-          </Typography.Title>
-          <Button onClick={() => navigate(ROUTES.ADMIN.MANAGE_USERS)} style={{ boxShadow: "none" }}>
+    <div className="app-form-layout">
+      <Card className="app-form-card rounded-2xl">
+
+        {/* =========== Header Section =========== */}
+        <div className="mb-7 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+          <div>
+            <Typography.Title level={3} className="mb-1 bg-gradient-to-r from-[#5a7e40] to-[#81ab63] bg-clip-text text-transparent">
+              {isEdit ? "Edit User Profile" : "Add New User"}
+            </Typography.Title>
+
+            <Typography.Text className="text-[#6d8060]">
+              {isEdit
+                ? "Update user details and assigned medical store."
+                : "Create a user and assign one medical store."}
+            </Typography.Text>
+          </div>
+
+          {/* =========== Back Button =========== */}
+          <Button
+            onClick={() => navigate(ROUTES.ADMIN.MANAGE_USERS)}
+            className="!h-11 !rounded-lg !border-[#cfe4b7] !bg-[#f7fde8] !px-6 !text-[#4f6841]"
+          >
             Back
           </Button>
         </div>
 
+        {/* =========== Form Section =========== */}
         <Form<UserFormValues>
           form={form}
           layout="vertical"
           requiredMark={false}
           onFinish={handleSubmit}
-          className="app-form"
-          initialValues={{ role: "user" }}
+          initialValues={{ medicalStoreId: "" }}
         >
-          <Row gutter={[16, 0]}>
+          <Row gutter={[18, 4]}>
+
+            {/* =========== Name Field =========== */}
             <Col xs={24} md={12}>
               <Form.Item
-                label="First Name"
-                name="firstName"
-                rules={[{ required: true, message: "Please enter first name" }]}
-              >
-                <Input placeholder="First Name" />
-              </Form.Item>
-            </Col>
-
-            <Col xs={24} md={12}>
-              <Form.Item label="Last Name" name="lastName">
-                <Input placeholder="Last Name" />
-              </Form.Item>
-            </Col>
-
-            <Col xs={24} md={12}>
-              <Form.Item
-                label="Phone Number"
-                name="phone"
+                label={requiredLabel("Name")}
+                name="name"
                 rules={[
-                  {
-                    validator: (_, value) => {
-                      if (!value) return Promise.resolve();
-                      return VALIDATION_REGEX.phone10.test(String(value))
-                        ? Promise.resolve()
-                        : Promise.reject(new Error(VALIDATION_MESSAGES.phone10));
-                    },
-                  },
+                  { required: true, message: "Please enter name" },
+                  { min: 3, message: "Name should be at least 3 characters" },
                 ]}
               >
-                <Input placeholder="Phone Number" maxLength={10} />
+                <Input placeholder="Full Name" className={inputClass} />
               </Form.Item>
             </Col>
 
+            {/* =========== Email Field =========== */}
             <Col xs={24} md={12}>
               <Form.Item
-                label="Email Address"
+                label={requiredLabel("Email Address")}
                 name="email"
                 rules={[
                   { required: true, message: "Please enter email" },
                   { type: "email", message: "Please enter valid email" },
                 ]}
               >
-                <Input placeholder="Email Address" />
+                <Input placeholder="Email Address" className={inputClass} />
               </Form.Item>
             </Col>
 
-            <Col xs={24} md={12}>
-              <Form.Item label="City" name="city">
-                <Input placeholder="City" />
+            {/* =========== Medical Store Select =========== */}
+            <Col xs={24}>
+              <Form.Item
+                label={requiredLabel("Medical Store")}
+                name="medicalStoreId"
+                rules={[{ required: true, message: "Please select medical store" }]}
+              >
+                <Select
+                  allowClear
+                  showSearch
+                  optionFilterProp="label"
+                  placeholder="Select medical store"
+                  options={storeOptions}
+                  loading={isStoresLoading}
+                  className={selectClass}
+                />
               </Form.Item>
             </Col>
 
-            <Col xs={24} md={12}>
-              <Form.Item label="State/County" name="state">
-                <Input placeholder="State" />
-              </Form.Item>
-            </Col>
-
+            {/* =========== Phone Field =========== */}
             <Col xs={24} md={12}>
               <Form.Item
-                label="Postcode"
-                name="pincode"
+                label="Phone Number"
+                name="phone"
                 rules={[
                   {
-                    validator: (_, value) => {
-                      if (!value) return Promise.resolve();
-                      return VALIDATION_REGEX.pincode6.test(String(value))
-                        ? Promise.resolve()
-                        : Promise.reject(new Error(VALIDATION_MESSAGES.pincode6));
+                    validator: (_, value: string) => {
+                      const next = (value || "").trim();
+                      if (!next) return Promise.resolve();
+                      if (VALIDATION_REGEX.phone10.test(next)) return Promise.resolve();
+                      return Promise.reject(new Error("Phone number must be exactly 10 digits"));
                     },
                   },
                 ]}
               >
-                <Input placeholder="Postcode" maxLength={6} />
+                <Input placeholder="Phone Number (Optional)" className={inputClass} />
               </Form.Item>
             </Col>
 
-            <Col xs={24} md={12}>
-              <Form.Item label="Address" name="address">
-                <Input placeholder="Address" />
-              </Form.Item>
-            </Col>
-
+            {/* =========== Password Field (Only Add Mode) =========== */}
             {!isEdit && (
               <Col xs={24} md={12}>
                 <Form.Item
-                  label="Password"
+                  label={requiredLabel("Password")}
                   name="password"
                   rules={[
                     { required: true, message: "Please enter password" },
-                    { min: 5, message: VALIDATION_MESSAGES.passwordMin5 },
+                    { min: 5, message: "Password must be at least 5 characters" },
                   ]}
                 >
-                  <Input.Password placeholder="Password" />
+                  <Input.Password placeholder="Password" className={inputClass} />
                 </Form.Item>
               </Col>
             )}
-
-            <Col xs={24} md={12}>
-              <Form.Item label="Role" name="role" rules={[{ required: true, message: "Please select role" }]}>
-                <Select
-                  options={[
-                    { value: "user", label: "User" },
-                    { value: "admin", label: "Admin" },
-                  ]}
-                />
-              </Form.Item>
-            </Col>
           </Row>
 
+          {/* =========== Submit Button =========== */}
           <Button
             type="primary"
             htmlType="submit"
             loading={mutation.isPending}
-            className="!h-11 !rounded-lg !px-6 !font-semibold"
-            style={{ boxShadow: "none" }}
+            className="!h-12 !rounded-lg !px-9 !font-semibold"
           >
             {isEdit ? "Update User" : "Add User"}
           </Button>

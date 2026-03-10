@@ -1,96 +1,123 @@
-import { Route, Routes } from "react-router-dom";
-import Signup from "../pages/auth/Signup";
-import Signin from "../pages/auth/Signin";
-import OtpVerification from "../pages/auth/OtpVerification";
-import Product from "../pages/global/Products";
-import Companies from "../pages/global/Companies";
-import Bills from "../pages/global/Bills";
-import Category from "../pages/global/Category";
+import { lazy, Suspense } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Navigate, Route, Routes } from "react-router-dom";
 import { getCurrentUser } from "../api/authApi";
+import { getAuthToken } from "../api/client";
 import { ROUTES } from "../constants/Routes";
-import AddCompany from "../pages/global/AddCompany";
-import AddProduct from "../pages/global/AddProduct";
-import ManageUsers from "../pages/admin/ManageUsers";
-import AddUser from "../pages/admin/AddUser";
-import GenerateBill from "../pages/global/GenerateBill";
-import InvoiceBill from "../pages/global/InvoiceBill";
-import Dashboard from "../pages/global/Dashboard";
-import Profile from "../pages/global/Profile";
-import ResetForgetPassword from "../pages/auth/ResetForgetPassword";
-import VerifyOtpAndChangePass from "../components/auth/VerifyOtpAndChangePass";
-import ChangePassword from "../pages/auth/ChangePassword";
+import AppLoader from "../components/common/loader/AppLoader";
+
+const Layout = lazy(() => import("../layout/Layout"));
+
+const Signin = lazy(() => import("../pages/auth/Signin"));
+const OtpVerification = lazy(() => import("../pages/auth/OtpVerification"));
+const ResetForgetPassword = lazy(() => import("../pages/auth/ResetForgetPassword"));
+const VerifyOtpAndChangePass = lazy(() => import("../components/auth/VerifyOtpAndChangePass"));
+
+const Dashboard = lazy(() => import("../pages/global/dashboard/Dashboard"));
+const Products = lazy(() => import("../pages/global/product/Products"));
+const Companies = lazy(() => import("../pages/global/company/Companies"));
+const CompanyDetails = lazy(() => import("../pages/global/company/CompanyDetails"));
+const Bills = lazy(() => import("../pages/global/bill/Bills"));
+const Category = lazy(() => import("../pages/global/category/Category"));
+const AddCategory = lazy(() => import("../pages/global/category/AddCategory"));
+const AddCompany = lazy(() => import("../pages/global/company/AddCompany"));
+const AddProduct = lazy(() => import("../pages/global/product/AddProduct"));
+const GenerateBill = lazy(() => import("../pages/global/bill/GenerateBill"));
+const InvoiceBill = lazy(() => import("../pages/global/bill/InvoiceBill"));
+const Profile = lazy(() => import("../pages/global/profile/Profile"));
+const ChangePassword = lazy(() => import("../pages/auth/ChangePassword"));
+
+// medical store pages
+const MedicalStores = lazy(() => import("../pages/global/medicalStore/MedicalStores"));
+const AddMedicalStore = lazy(() => import("../pages/global/medicalStore/AddMedicalStore"));
+
+const ManageUsers = lazy(() => import("../pages/admin/ManageUsers"));
+const AddUser = lazy(() => import("../pages/admin/AddUser"));
+
+const RouteLoader = () => <AppLoader tip="Loading your workspace..." />;
+
+const sharedRoutes = [
+  { path: ROUTES.PRODUCTS.GET_PRODUCTS, element: <Products /> },
+  { path: ROUTES.CATEGORY.GET_CATEGORIES, element: <Category /> },
+  { path: ROUTES.COMPANY.GET_COMPANY, element: <Companies /> },
+  { path: ROUTES.BILL.GET_BILLS, element: <Bills /> },
+  { path: ROUTES.PRODUCTS.ADD_PRODUCT, element: <AddProduct /> },
+  { path: ROUTES.CATEGORY.ADD_CATEGORY, element: <AddCategory /> },
+  { path: ROUTES.PRODUCTS.UPDATE_PRODUCT, element: <AddProduct /> },
+  { path: ROUTES.COMPANY.ADD_COMPANY, element: <AddCompany /> },
+  { path: ROUTES.COMPANY.UPDATE_COMPANY, element: <AddCompany /> },
+  { path: ROUTES.COMPANY.VIEW_COMPANY, element: <CompanyDetails /> },
+  { path: ROUTES.BILL.GENERATE_BILL, element: <GenerateBill /> },
+  { path: ROUTES.BILL.UPDATE_BILL, element: <GenerateBill /> },
+  { path: ROUTES.BILL.VIEW_INVOICE, element: <InvoiceBill /> },
+];
 
 const AllRoute = () => {
+  const hasToken = Boolean(getAuthToken());
 
-  const {data} = useQuery({
-    queryKey : ["currentUser"],
-    queryFn : getCurrentUser,
+  const { data, isPending } = useQuery({
+    queryKey: ["currentUser"],
+    queryFn: getCurrentUser,
+    enabled: hasToken,
     retry: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     refetchOnMount: false,
-  })
+  });
 
-  const role = data?.user?.role || null;
-  const sharedRoutes = [
-    { path: ROUTES.PRODUCTS.GET_PRODUCTS, element: <Product /> },
-    { path: ROUTES.CATEGORY.GET_CATEGORIES, element: <Category /> },
-    { path: ROUTES.COMPANY.GET_COMPANY, element: <Companies /> },
-    { path: ROUTES.BILL.GET_BILLS, element: <Bills /> },
-    { path: ROUTES.PRODUCTS.ADD_PRODUCT, element: <AddProduct /> },
-    { path: ROUTES.CATEGORY.ADD_CATEGORY, element: <Category /> },
-    { path: ROUTES.PRODUCTS.UPDATE_PRODUCT, element: <AddProduct /> },
-    { path: ROUTES.COMPANY.ADD_COMPANY, element: <AddCompany /> },
-    { path: ROUTES.COMPANY.UPDATE_COMPANY, element: <AddCompany /> },
-    { path: ROUTES.BILL.GENERATE_BILL, element: <GenerateBill /> },
-    { path: ROUTES.BILL.UPDATE_BILL, element: <GenerateBill /> },
-    { path: ROUTES.BILL.VIEW_INVOICE, element: <InvoiceBill /> },
-  ];
+  if (isPending && hasToken) {
+    return <RouteLoader />;
+  }
+
+  const role = data?.user?.role ?? null;
+  const isAuthenticated = role === "admin" || role === "user";
 
   return (
-    <div>
+    <Suspense fallback={<RouteLoader />}>
       <Routes>
-
-        {!role && (
+        {!isAuthenticated && (
           <>
-            <Route path={ROUTES.AUTH.SIGNUP} element={<Signup />} />
+            <Route path="/" element={<Navigate to={ROUTES.AUTH.SIGNIN} replace />} />
             <Route path={ROUTES.AUTH.SIGNIN} element={<Signin />} />
             <Route path={ROUTES.AUTH.VERIFY_OTP} element={<OtpVerification />} />
             <Route path={ROUTES.AUTH.FORGET_PASSWORD} element={<ResetForgetPassword />} />
             <Route path={ROUTES.AUTH.OTP_VERIFY_RESET_PASSWORD} element={<VerifyOtpAndChangePass />} />
+            <Route path={ROUTES.NOT_FOUND} element={<Navigate to={ROUTES.AUTH.SIGNIN} replace />} />
           </>
         )}
 
-        {role === "admin" && (
-          <>
+        {isAuthenticated && (
+          <Route element={<Layout />}>
+            <Route path="/" element={<Navigate to={ROUTES.ADMIN.DASHBOARD} replace />} />
             <Route path={ROUTES.ADMIN.DASHBOARD} element={<Dashboard />} />
-            {sharedRoutes.map((r) => (
-              <Route key={r.path} path={r.path} element={r.element} />
-            ))}
-            <Route path={ROUTES.ADMIN.MANAGE_USERS} element={<ManageUsers />} />
-            <Route path={ROUTES.ADMIN.ADD_USERS} element={<AddUser />} />
-            <Route path={ROUTES.ADMIN.UPDATE_USER} element={<AddUser />} />
-            <Route path={ROUTES.ADMIN.PROFILE} element={<Profile />} />
-            <Route path={ROUTES.AUTH.CHANGE_PASSWORD} element={<ChangePassword />} />
-          </>
-        )}
-
-        {role === "user" && (
-          <>
-            <Route path={ROUTES.ADMIN.DASHBOARD} element={<Dashboard />} />
-            {sharedRoutes.map((r) => (
-              <Route key={r.path} path={r.path} element={r.element} />
+            {sharedRoutes.map((route) => (
+              <Route key={route.path} path={route.path} element={route.element} />
             ))}
             <Route path={ROUTES.USER.PROFILE} element={<Profile />} />
             <Route path={ROUTES.AUTH.CHANGE_PASSWORD} element={<ChangePassword />} />
-          </>
+
+            {role === "admin" && (
+              <>
+                <Route path={ROUTES.MEDICAL_STORE.GET_MEDICAL_STORES} element={<MedicalStores />} />
+                <Route path={ROUTES.MEDICAL_STORE.ADD_MEDICAL_STORE} element={<AddMedicalStore />} />
+                <Route path={ROUTES.MEDICAL_STORE.UPDATE_MEDICAL_STORE} element={<AddMedicalStore />} />
+
+                <Route path={ROUTES.ADMIN.MANAGE_USERS} element={<ManageUsers />} />
+                <Route path={ROUTES.ADMIN.ADD_USERS} element={<AddUser />} />
+                <Route path={ROUTES.ADMIN.UPDATE_USER} element={<AddUser />} />
+              </>
+            )}
+
+            <Route path={ROUTES.AUTH.SIGNIN} element={<Navigate to={ROUTES.ADMIN.DASHBOARD} replace />} />
+            <Route path={ROUTES.AUTH.VERIFY_OTP} element={<Navigate to={ROUTES.ADMIN.DASHBOARD} replace />} />
+            <Route path={ROUTES.AUTH.FORGET_PASSWORD} element={<Navigate to={ROUTES.ADMIN.DASHBOARD} replace />} />
+            <Route path={ROUTES.AUTH.OTP_VERIFY_RESET_PASSWORD} element={<Navigate to={ROUTES.ADMIN.DASHBOARD} replace />} />
+
+            <Route path={ROUTES.NOT_FOUND} element={<h1>404 Page Not Found</h1>} />
+          </Route>
         )}
-
-        <Route path={ROUTES.NOT_FOUND} element={<h1>404 Page Not Found</h1>} />
-
       </Routes>
-    </div>
+    </Suspense>
   );
 };
 

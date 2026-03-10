@@ -1,10 +1,5 @@
-import { useState, useMemo, useEffect } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { addCategory, getCategories, updateCategory } from "../../../api/categoryApi";
-import { getCurrentUser } from "../../../api/authApi";
-import { Button, Card, Form, Input, List, Typography } from "antd";
-import axios from "axios";
-import { notify } from "../../../utils/notify";
+import { Button, Card, Form, Input, Select, Typography } from "antd";
+import { type CategoryFormValues, type CategorySuggestionRow, useCategoryForm } from "../../../hooks";
 
 interface Props {
   onClose?: () => void;
@@ -12,122 +7,42 @@ interface Props {
   categoryId?: string;
 }
 
-interface CategoryFormValues {
-  name: string;
-}
-
 const AddCategoryForm = ({ onClose, initialName, categoryId }: Props) => {
   const [form] = Form.useForm<CategoryFormValues>();
-  const [name, setName] = useState(initialName || "");
-  const queryClient = useQueryClient();
-
-  const { data: categoriesData } = useQuery({
-    queryKey: ["categories"],
-    queryFn: getCategories,
-  });
-
-  const { data: currentUser } = useQuery({
-    queryKey: ["currentUser"],
-    queryFn: getCurrentUser,
-  });
-
-  useEffect(() => {
-    const next = initialName || "";
-    setName(next);
-    form.setFieldsValue({ name: next });
-  }, [form, initialName]);
-
-  const suggestions = useMemo(() => {
-    const payload = categoriesData?.data;
-    if (!payload) return [] as string[];
-
-    const docs = Array.isArray(payload) ? payload : [];
-    const isAdmin = currentUser?.user?.role === "admin";
-    const editDoc = docs.find((d: any) => d._id === categoryId);
-    const targetUserId = isAdmin
-      ? editDoc?.userId?._id || editDoc?.userId
-      : currentUser?.user?._id;
-
-    return docs
-      .filter((d: any) => {
-        const uid = d?.userId?._id || d?.userId;
-        return isAdmin ? uid === targetUserId : uid === currentUser?.user?._id;
-      })
-      .map((d: any) => d?.name)
-      .filter(Boolean);
-  }, [categoriesData, currentUser, categoryId]);
-
-  const addMut = useMutation({
-    mutationFn: (payload: { name: string }) => addCategory(payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["categories"] });
-      notify.success("Category added successfully.");
-      setTimeout(() => {
-        setName("");
-        form.resetFields();
-        onClose && onClose();
-      }, 700);
-    },
-    onError: (error) => {
-      if (axios.isAxiosError(error)) {
-        notify.error(error.response?.data?.message || "Failed to add category");
-      } else {
-        notify.error("Failed to add category");
-      }
-    },
-  });
-
-  const updateMut = useMutation({
-    mutationFn: (payload: { id: string; name: string }) => updateCategory(payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["categories"] });
-      notify.success("Category updated successfully.");
-      setTimeout(() => {
-        setName("");
-        form.resetFields();
-        onClose && onClose();
-      }, 700);
-    },
-    onError: (error) => {
-      if (axios.isAxiosError(error)) {
-        notify.error(error.response?.data?.message || "Failed to update category");
-      } else {
-        notify.error("Failed to update category");
-      }
-    },
-  });
-
-  const isEdit = !!initialName;
-
-  const handleSubmit = (values: CategoryFormValues) => {
-    const normalizedName = values.name.trim();
-
-    if (isEdit) {
-      updateMut.mutate({
-        id: categoryId!,
-        name: normalizedName,
-      });
-    } else {
-      addMut.mutate({ name: normalizedName });
-    }
-  };
-
-  const isLoading = isEdit ? updateMut.isPending : addMut.isPending;
+  const {
+    isEdit,
+    isAdmin,
+    isUsersLoading,
+    isSubmitting,
+    userOptions,
+    showSuggestionPanel,
+    suggestionRows,
+    normalizedCategoryNames,
+    initialNormalizedName,
+    handleSubmit,
+    handleCancel,
+  } = useCategoryForm(form, { initialName, categoryId, onClose });
 
   return (
-    <Card className="app-form-card !rounded-xl !border-[#d7e1f0] !bg-white" style={{ boxShadow: "none" }}>
-      <Typography.Title level={5} className="!mb-4 !text-[#1f2f4f]">
+    <Card className="app-form-card !rounded-xl !border-[#d9e7c8] !bg-[#fefffc]" style={{ boxShadow: "none" }}>
+      <Typography.Title level={5} className="!mb-4 !text-[#2d4620]">
         {isEdit ? "Update Category" : "Add Category"}
       </Typography.Title>
 
-      <Form<CategoryFormValues>
-        form={form}
-        onFinish={handleSubmit}
-        onValuesChange={(_, allValues) => setName(allValues.name || "")}
-        layout="vertical"
-        requiredMark={false}
-        className="app-form"
-      >
+      <Form<CategoryFormValues> form={form} onFinish={handleSubmit} layout="vertical" requiredMark={false} className="app-form">
+        {isAdmin && !isEdit && (
+          <Form.Item label="Assign User" name="userId" rules={[{ required: true, message: "Please select user" }]}>
+            <Select
+              showSearch
+              optionFilterProp="label"
+              placeholder="Select User"
+              options={userOptions}
+              className="!h-11 [&_.ant-select-selector]:!h-11 [&_.ant-select-selector]:!rounded-lg [&_.ant-select-selection-item]:!leading-[42px] [&_.ant-select-selection-placeholder]:!leading-[42px]"
+              loading={isUsersLoading}
+            />
+          </Form.Item>
+        )}
+
         <Form.Item
           label="Category Name"
           name="name"
@@ -135,49 +50,58 @@ const AddCategoryForm = ({ onClose, initialName, categoryId }: Props) => {
             { required: true, message: "Please enter category name" },
             { min: 2, message: "Category name must be at least 2 characters" },
             { max: 100, message: "Category name can be maximum 100 characters" },
+            {
+              validator: (_, value: string) => {
+                const normalizedName = (value || "").trim().toLowerCase();
+                if (!normalizedName) return Promise.resolve();
+
+                const duplicateExists =
+                  normalizedCategoryNames.has(normalizedName) &&
+                  (!isEdit || normalizedName !== initialNormalizedName);
+
+                return duplicateExists ? Promise.reject(new Error("Category already exists.")) : Promise.resolve();
+              },
+            },
           ]}
         >
-          <Input placeholder="Enter category" maxLength={100} />
+          <div>
+            <Input placeholder="Enter category" maxLength={100} className="!h-11" />
+
+            {showSuggestionPanel && (
+              <div className="mt-2 w-full overflow-hidden rounded-lg border border-[#d9e7c8] bg-[#fefffc] shadow-sm sm:w-1/2">
+                <div className="border-b border-[#d9e7c8] bg-[#f4faec] px-3 py-2 text-xs font-semibold uppercase tracking-wide text-[#6d8060]">
+                  Category
+                </div>
+
+                <div className="max-h-40 overflow-y-auto">
+                  {suggestionRows.length > 0 ? (
+                    suggestionRows.map((row: CategorySuggestionRow) => (
+                      <button
+                        key={row.key}
+                        type="button"
+                        className={`w-full border-b border-[#edf4e3] px-3 py-2 text-left text-sm transition-colors hover:bg-[#f7fde8] last:border-b-0 ${
+                          row.isDuplicate ? "bg-red-50 font-semibold text-red-700" : "font-medium text-[#4f6841]"
+                        }`}
+                        onClick={() => form.setFieldsValue({ name: row.categoryName })}
+                      >
+                        <span className="truncate">{row.categoryName}</span>
+                      </button>
+                    ))
+                  ) : (
+                    <div className="px-3 py-2 text-sm text-[#6d8060]">No matching categories</div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
         </Form.Item>
 
-        {name && suggestions.length > 0 && (
-          <div className="mb-4">
-            <Typography.Text className="!mb-2 !block !text-[#7483a3]">Suggestions</Typography.Text>
-            <List
-              size="small"
-              bordered
-              className="!rounded-lg !border-[#d7e1f0]"
-              dataSource={suggestions
-                .filter((s: any) => s.toString().toLowerCase().includes(name.toLowerCase()))
-                .slice(0, 6)}
-              renderItem={(item: string) => (
-                <List.Item
-                  className="!cursor-pointer !text-[#2f55d4] hover:!bg-[#f5f8ff]"
-                  onClick={() => {
-                    setName(item);
-                    form.setFieldsValue({ name: item });
-                  }}
-                >
-                  {item}
-                </List.Item>
-              )}
-            />
-          </div>
-        )}
-
         <div className="flex justify-end gap-2">
-          <Button
-            onClick={() => {
-              setName("");
-              form.resetFields();
-              onClose && onClose();
-            }}
-            style={{ boxShadow: "none" }}
-          >
+          <Button onClick={handleCancel} style={{ boxShadow: "none" }}>
             Cancel
           </Button>
 
-          <Button type="primary" htmlType="submit" loading={isLoading} style={{ boxShadow: "none" }}>
+          <Button type="primary" htmlType="submit" loading={isSubmitting} style={{ boxShadow: "none" }}>
             {isEdit ? "Update" : "Add Category"}
           </Button>
         </div>
