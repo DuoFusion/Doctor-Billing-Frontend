@@ -15,6 +15,7 @@ const InvoiceBill = () => {
     invoiceMedicalName,
     invoicePan,
     invoiceGst,
+    discountedSubTotal,
     totalSGST,
     totalCGST,
     totalIGST,
@@ -173,7 +174,7 @@ const InvoiceBill = () => {
               </div>
               <div className="summary-row">
                 <span>Sub Total</span>
-                <span>{toCurrency(billRecord.subTotal)}</span>
+                <span>{toCurrency(discountedSubTotal)}</span>
               </div>
 
               {hasGst &&

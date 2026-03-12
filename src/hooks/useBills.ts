@@ -98,13 +98,28 @@ export const useBillDetails = () => {
   const invoiceMedicalName = medicalStore?.name || user?.medicalName || user?.name || "-";
   const invoicePan = medicalStore?.panNumber || user?.pan || "-";
   const invoiceGst = medicalStore?.gstNumber || user?.gstin || "-";
-  const totalSGST = items.reduce((sum, item) => sum + (Number(item?.sgst) || 0), 0);
-  const totalCGST = items.reduce((sum, item) => sum + (Number(item?.cgst) || 0), 0);
-  const totalIGST = items.reduce((sum, item) => sum + (Number(item?.igst) || 0), 0);
-  const subTotalValue = Number(billRecord?.subTotal || 0);
-  const sgstPercent = subTotalValue > 0 ? (totalSGST * 100) / subTotalValue : 0;
-  const cgstPercent = subTotalValue > 0 ? (totalCGST * 100) / subTotalValue : 0;
-  const igstPercent = subTotalValue > 0 ? (totalIGST * 100) / subTotalValue : 0;
+  const totalSGSTByItem = items.reduce((sum, item) => sum + (Number(item?.sgst) || 0), 0);
+  const totalCGSTByItem = items.reduce((sum, item) => sum + (Number(item?.cgst) || 0), 0);
+  const totalIGSTByItem = items.reduce((sum, item) => sum + (Number(item?.igst) || 0), 0);
+
+  const billSubTotal = Number(billRecord?.subTotal || 0);
+  const billDiscount = Number(billRecord?.discount || 0);
+  const discountedSubTotal = Math.max(billSubTotal - billDiscount, 0);
+
+  const billTotalGST = Number(billRecord?.totalGST || 0);
+  const totalGST = billTotalGST || totalSGSTByItem + totalCGSTByItem + totalIGSTByItem;
+
+  // Determine tax type (prefer bill-level GST info; fall back to item-level GST presence)
+  const hasIGST = totalIGSTByItem > 0 && totalSGSTByItem === 0 && totalCGSTByItem === 0;
+  const hasSGST = totalSGSTByItem > 0 || totalCGSTByItem > 0;
+
+  const totalIGST = hasIGST ? totalGST : 0;
+  const totalSGST = hasSGST ? totalGST / 2 : 0;
+  const totalCGST = hasSGST ? totalGST / 2 : 0;
+
+  const sgstPercent = discountedSubTotal > 0 ? (totalSGST * 100) / discountedSubTotal : 0;
+  const cgstPercent = discountedSubTotal > 0 ? (totalCGST * 100) / discountedSubTotal : 0;
+  const igstPercent = discountedSubTotal > 0 ? (totalIGST * 100) / discountedSubTotal : 0;
 
   useEffect(() => {
     setIsSignatureLoadFailed(false);
@@ -166,6 +181,7 @@ export const useBillDetails = () => {
     invoiceMedicalName,
     invoicePan,
     invoiceGst,
+    discountedSubTotal,
     totalSGST,
     totalCGST,
     totalIGST,

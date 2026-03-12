@@ -245,15 +245,17 @@ export const useBillForm = () => {
   }));
 
   const subtotal = items.reduce((sum, item) => sum + item.qty * item.rate, 0);
+  const discountAmount = Number(billDiscount) || 0;
+  const discountedSubtotal = Math.max(subtotal - discountAmount, 0);
   const taxType = selectedStoreData?.taxType || "SGST_CGST";
   const taxPercent = Math.max(Number(selectedStoreData?.taxPercent) || 0, 0);
-  const gstTotal = isGstEnabled ? (subtotal * taxPercent) / 100 : 0;
+  const gstTotal = isGstEnabled ? (discountedSubtotal * taxPercent) / 100 : 0;
   const sgstAmount = taxType === "SGST_CGST" ? gstTotal / 2 : 0;
   const cgstAmount = taxType === "SGST_CGST" ? gstTotal / 2 : 0;
   const igstAmount = taxType === "IGST" ? gstTotal : 0;
   const sgstPercent = taxPercent / 2;
   const cgstPercent = taxPercent / 2;
-  const grandTotal = subtotal + gstTotal - (Number(billDiscount) || 0);
+  const grandTotal = discountedSubtotal + gstTotal;
 
   const addItemToList = () => {
     const nextItemErrors: ItemErrors = {};
@@ -453,6 +455,7 @@ export const useBillForm = () => {
     sgstPercent,
     cgstPercent,
     grandTotal,
+    discountedSubtotal,
     mutation,
     resetItemEditor,
     clearItems,

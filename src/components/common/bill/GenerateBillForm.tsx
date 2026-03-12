@@ -64,7 +64,7 @@ const GenerateBillForm = () => {
     userSelectOptions,
     companySelectOptions,
     productsForStore,
-    subtotal,
+    discountedSubtotal,
     taxType,
     taxPercent,
     sgstAmount,
@@ -246,7 +246,7 @@ const GenerateBillForm = () => {
           </div>
 
           <BillAmountSummary
-            subtotal={subtotal}
+            subtotal={discountedSubtotal}
             taxType={taxType}
             taxPercent={taxPercent}
             sgstAmount={sgstAmount}
