@@ -92,17 +92,6 @@ const CompanyTable = () => {
           },
         ]
       : []),
-    ...(isAdmin
-      ? [
-          {
-            title: "Added By",
-            key: "addedBy",
-            sorter: false,
-            render: (_: unknown, record: CompanyRecord) =>
-              renderNameEmail(getCompanyAddedByName(record), getCompanyAddedByEmail(record)),
-          },
-        ]
-      : []),
     {
       title: "GST",
       dataIndex: "gstNumber",
@@ -121,6 +110,17 @@ const CompanyTable = () => {
       key: "email",
       render: (value: string) => <Typography.Text>{value || "-"}</Typography.Text>,
     },
+    ...(isAdmin
+      ? [
+          {
+            title: "Added By",
+            key: "addedBy",
+            sorter: false,
+            render: (_: unknown, record: CompanyRecord) =>
+              renderNameEmail(getCompanyAddedByName(record), getCompanyAddedByEmail(record)),
+          },
+        ]
+    : []),
     {
       title: "Created / Updated At",
       key: "createdUpdated",
@@ -134,34 +134,10 @@ const CompanyTable = () => {
         const active = record.isActive !== false;
         return (
           <Space size={10}>
-            <Button
-              type="text"
-              icon={active ? <PoweroffOutlined className="text-orange-600" /> : <CheckCircleOutlined className="text-emerald-600" />}
-              onClick={() => openStatusModal(record)}
-              className={tableActionButtonClass}
-            />
-
-            <Button
-              type="text"
-              icon={<EditOutlined className="text-[#4f6841]" />}
-              onClick={() => navigate(ROUTES.COMPANY.UPDATE_COMPANY.replace(":id", record._id))}
-              className={tableActionButtonClass}
-            />
-
-            <Button
-              type="text"
-              danger
-              icon={<DeleteOutlined />}
-              onClick={() => handleDeleteCompany(record._id)}
-              className={`${tableActionButtonClass} hover:!border-[#f7caca] hover:!bg-red-50`}
-            />
-
-            <Button
-              type="text"
-              icon={<EyeOutlined className="text-[#4f6841]" />}
-              onClick={() => navigate(ROUTES.COMPANY.VIEW_COMPANY.replace(":id", record._id))}
-              className={tableActionButtonClass}
-            />
+            <Button type="text" icon={active ? <PoweroffOutlined className="text-orange-600" /> : <CheckCircleOutlined className="text-emerald-600" />} onClick={() => openStatusModal(record)} className={tableActionButtonClass} />
+            <Button type="text" icon={<EditOutlined className="text-[#4f6841]" />} onClick={() => navigate(ROUTES.COMPANY.UPDATE_COMPANY.replace(":id", record._id))} className={tableActionButtonClass}/>
+            <Button  type="text"  danger  icon={<DeleteOutlined />}  onClick={() => handleDeleteCompany(record._id)}  className={`${tableActionButtonClass} hover:!border-[#f7caca] hover:!bg-red-50`}/>
+            <Button type="text" icon={<EyeOutlined className="text-[#4f6841]" />} onClick={() => navigate(ROUTES.COMPANY.VIEW_COMPANY.replace(":id", record._id))} className={tableActionButtonClass}/>
           </Space>
         );
       },
@@ -169,12 +145,9 @@ const CompanyTable = () => {
   ];
 
   if (isLoading || isStoresLoading) return <TableLoader tip="Loading companies..." />;
-
   if (isError) {
     return (
-      <Typography.Text type="danger" className="p-6">
-        {(error as Error).message}
-      </Typography.Text>
+      <Typography.Text type="danger" className="p-6">{(error as Error).message}</Typography.Text>
     );
   }
 

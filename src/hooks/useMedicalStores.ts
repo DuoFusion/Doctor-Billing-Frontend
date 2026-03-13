@@ -50,10 +50,7 @@ export const resolveMedicalStoreName = (
 };
 
 // ============ Fill medical store form in edit mode ============
-export const setMedicalStoreFormValues = (
-  form: ReturnType<typeof Form.useForm<StoreFormValues>>[0],
-  storeData: MedicalStoreRecord | undefined
-) => {
+export const setMedicalStoreFormValues = ( form: ReturnType<typeof Form.useForm<StoreFormValues>>[0],storeData: MedicalStoreRecord | undefined) => {
   if (!storeData) return;
 
   form.setFieldsValue({
@@ -66,30 +63,42 @@ export const setMedicalStoreFormValues = (
     state: storeData.state || "",
     pincode: String(storeData.pincode || ""),
     address: storeData.address || "",
+    defaultCompanyAddress: storeData.defaultCompanyAddress || "",
+    defaultCompanyCity: storeData.defaultCompanyCity || "",
+    defaultCompanyState: storeData.defaultCompanyState || "",
+    defaultCompanyPincode: String(storeData.defaultCompanyPincode || ""),
   });
 };
 
 // ============ Medical store add/edit form hook ============
 export const useMedicalStoreForm = (form: ReturnType<typeof Form.useForm<StoreFormValues>>[0]) => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { id } = useParams<{ id: string }>();
   const isEdit = Boolean(id);
   const taxType = Form.useWatch("taxType", form);
   const [signature, setSignature] = useState<File | null>(null);
 
-  const { data: storeData, isLoading: isLoadingStore } = useMedicalStoreDetails(id as string, {
-    enabled: isEdit,
-  });
+  const { data: storeData, isLoading: isLoadingStore } = useMedicalStoreDetails(id as string, {enabled: isEdit, });
 
   useEffect(() => {
     setMedicalStoreFormValues(form, storeData);
   }, [form, storeData]);
 
+  //update and add medical store use the same mutation, it decides based on presence of id parameter
   const mutation = useMutation({
     mutationFn: (payload: StoreFormValues & { signatureImg?: File | null }) =>
       isEdit && id ? updateMedicalStore(id, payload) : addMedicalStore(payload),
     onSuccess: () => {
       notify.success(isEdit ? "Medical store updated successfully." : "Medical store added successfully.");
+      queryClient.invalidateQueries({ queryKey: ["stores"] });
+      queryClient.refetchQueries({ queryKey: ["stores"] });
+      queryClient.invalidateQueries({ queryKey: ["medicalStores"] });
+      queryClient.refetchQueries({ queryKey: ["medicalStores"] });
+      if (id) {
+        queryClient.invalidateQueries({ queryKey: ["medicalStore", id] });
+        queryClient.refetchQueries({ queryKey: ["medicalStore", id] });
+      }
       setTimeout(() => navigate(ROUTES.MEDICAL_STORE.GET_MEDICAL_STORES), 900);
     },
     onError: (error) => {
@@ -112,6 +121,10 @@ export const useMedicalStoreForm = (form: ReturnType<typeof Form.useForm<StoreFo
       state: values.state.trim(),
       pincode: values.pincode.trim(),
       address: values.address.trim(),
+      defaultCompanyAddress: (values.defaultCompanyAddress || "").trim(),
+      defaultCompanyCity: (values.defaultCompanyCity || "").trim(),
+      defaultCompanyState: (values.defaultCompanyState || "").trim(),
+      defaultCompanyPincode: (values.defaultCompanyPincode || "").trim(),
       ...(signature ? { signatureImg: signature } : {}),
       ...(values.removeSignature ? { removeSignature: true } : {}),
     });

@@ -9,11 +9,7 @@ const API = createApiClient();
 
 // ============ Normalize Company List Response ============
 const normalizeCompanyListResponse = (payload: CompanyListApiResponse): CompanyListResponse => {
-  const companies = Array.isArray(payload.companies)
-    ? payload.companies
-    : Array.isArray(payload.data)
-      ? payload.data
-      : [];
+  const companies = Array.isArray(payload.companies) ? payload.companies : Array.isArray(payload.data) ? payload.data : [];
 
   const total = companies.length;
 

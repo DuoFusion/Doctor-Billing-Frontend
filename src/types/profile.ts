@@ -40,4 +40,8 @@ export type ProfileMedicalFormValues = ProfileFormValues & {
   city?: string;
   state?: string;
   pincode?: string;
+  defaultCompanyAddress?: string;
+  defaultCompanyCity?: string;
+  defaultCompanyState?: string;
+  defaultCompanyPincode?: string;
 };

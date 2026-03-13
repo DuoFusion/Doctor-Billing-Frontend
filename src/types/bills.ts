@@ -68,3 +68,8 @@ export type BillListResponse = {
   pagination: PaginationMeta;
   message?: string;
 };
+
+export type BillLike = Pick<
+  BillRecord,
+  "_id" | "billStatus" | "billNumber" | "items" | "company" | "purchaseDate" | "totalGST" | "subTotal" | "grandTotal" | "userId"
+>;

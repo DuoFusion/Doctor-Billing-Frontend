@@ -8,11 +8,7 @@ const ProfileDetailsForm = () => {
 
   if (isLoading) {
     return (
-      <Card
-        className="!rounded-xl !border-[#d9e7c8] !bg-[#fefffc]"
-        style={{ boxShadow: "none", textShadow: "none" }}
-        loading
-      />
+      <Card className="!rounded-xl !border-[#d9e7c8] !bg-[#fefffc]" style={{ boxShadow: "none", textShadow: "none" }} loading />
     );
   }
 

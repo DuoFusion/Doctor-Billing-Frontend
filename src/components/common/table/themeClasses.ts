@@ -33,26 +33,3 @@ export const tableSurfaceClass =
 
 export const tableActionButtonClass =
   "!inline-flex !h-10 !w-10 !min-w-0 !items-center !justify-center !rounded-2xl !border-0 !bg-[#eff4e9] !p-0 !leading-none !shadow-none [&_.anticon]:!inline-flex [&_.anticon]:!items-center [&_.anticon]:!justify-center [&_.anticon]:!leading-none hover:!bg-[#e3ecd9]";
-
-export const dashboardTableCardClass =
-  "min-w-0 overflow-hidden rounded-[26px] bg-[linear-gradient(180deg,#ffffff_0%,#fbfdf8_100%)] shadow-[0_18px_42px_rgba(95,122,74,0.08)]";
-
-export const dashboardTableHeaderClass =
-  "flex items-center justify-between px-5 py-5 sm:px-6";
-
-export const dashboardTableViewAllButtonClass =
-  "inline-flex items-center gap-2 rounded-full bg-[#eff4e8] px-3.5 py-2 text-sm font-semibold text-[#2d4620] transition hover:bg-[#e3ecd9]";
-
-export const dashboardTableClass = "w-full text-left text-sm text-[#3d564a]";
-
-export const dashboardTableHeadClass = "bg-[#f4faec]";
-
-export const dashboardTableHeadCellClass =
-  "whitespace-nowrap border-b border-[#edf2e7] px-6 py-4 text-xs font-semibold uppercase tracking-[0.08em] text-[#607257]";
-
-export const dashboardTableRowClass =
-  "border-b border-[#f0f4eb] transition-colors hover:bg-[#f7faf3] last:border-b-0";
-
-export const dashboardTableCellClass = "whitespace-nowrap px-6 py-4 text-[#3d564a]";
-
-export const dashboardTablePrimaryCellClass = "whitespace-nowrap px-6 py-4 font-semibold text-[#2d4620]";

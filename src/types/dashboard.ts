@@ -1,5 +1,9 @@
 export type DashboardStats = {
   bills: number;
+  paidBills: number;
+  dueBills: number;
+  paidAmount: number;
+  dueAmount: number;
   products: number;
   companies: number;
   categories: number;

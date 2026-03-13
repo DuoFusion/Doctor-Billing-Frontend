@@ -3,35 +3,20 @@ import { UploadOutlined } from "@ant-design/icons";
 import { type StoreFormValues, useMedicalStoreForm } from "../../../hooks";
 
 const requiredLabel = (label: string) => (
-  <span className="font-medium text-[#607257]">
-    {label}
-    <span className="ml-1 text-red-500">*</span>
-  </span>
+  <span className="font-medium text-[#607257]"> {label} <span className="ml-1 text-red-500">*</span> </span>
 );
+const optionalLabel = (label: string) => <span className="font-medium text-[#607257]">{label}</span>;
 
 const inputClass = "!h-11 !rounded-lg";
-const selectClass =
-  "!w-full [&_.ant-select-selector]:!h-11 [&_.ant-select-selector]:!rounded-lg [&_.ant-select-selection-item]:!leading-[42px] [&_.ant-select-selection-placeholder]:!leading-[42px]";
-const formClassName =
-  "app-form [&_.ant-form-item]:!mb-6 [&_.ant-form-item-explain-error]:!mt-1.5 [&_.ant-form-item-label>label]:!text-[13px]";
-const secondaryButtonClass =
-  "!h-11 !rounded-lg !border-[#cfe4b7] !bg-[#f7fde8] !px-7 !text-[#4f6841] hover:!border-[#b8d69a] hover:!bg-[#ebffd8] hover:!text-[#3a592b]";
+const selectClass ="!w-full [&_.ant-select-selector]:!h-11 [&_.ant-select-selector]:!rounded-lg [&_.ant-select-selection-item]:!leading-[42px] [&_.ant-select-selection-placeholder]:!leading-[42px]";
+const formClassName ="app-form [&_.ant-form-item]:!mb-6 [&_.ant-form-item-explain-error]:!mt-1.5 [&_.ant-form-item-label>label]:!text-[13px]";
+const secondaryButtonClass = "!h-11 !rounded-lg !border-[#cfe4b7] !bg-[#f7fde8] !px-7 !text-[#4f6841] hover:!border-[#b8d69a] hover:!bg-[#ebffd8] hover:!text-[#3a592b]";
 
 const AddMedicalStoreForm = () => {
   const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
   const gstRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/;
   const [form] = Form.useForm<StoreFormValues>();
-  const {
-    goBack,
-    isEdit,
-    taxType,
-    signature,
-    setSignature,
-    existingSignatureUrl,
-    isLoadingStore,
-    mutation,
-    handleSubmit,
-  } = useMedicalStoreForm(form);
+  const { goBack, isEdit, taxType, signature, setSignature, existingSignatureUrl, isLoadingStore, mutation, handleSubmit } = useMedicalStoreForm(form);
 
   const handleUppercaseChange = (field: "gstNumber" | "panNumber") => (event: React.ChangeEvent<HTMLInputElement>) => {
     form.setFieldValue(field, String(event.target.value || "").toUpperCase());
@@ -50,48 +35,23 @@ const AddMedicalStoreForm = () => {
       <Card className="app-form-card rounded-2xl">
         <div className="mb-7 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
           <div>
-            <Typography.Title level={3} className="mb-1 bg-gradient-to-r from-[#5a7e40] to-[#81ab63] bg-clip-text text-transparent">
-              {isEdit ? "Update Medical Store" : "Add Medical Store"}
-            </Typography.Title>
-            <Typography.Text className="text-[#6d8060]">
-              Maintain medical store profile information including signature for invoices.
-            </Typography.Text>
+            <Typography.Title level={3} className="mb-1 bg-gradient-to-r from-[#5a7e40] to-[#81ab63] bg-clip-text text-transparent"> {isEdit ? "Update Medical Store" : "Add Medical Store"}</Typography.Title>
+            <Typography.Text className="text-[#6d8060]">Maintain medical store profile information including signature for invoices.</Typography.Text>
           </div>
-          <Button onClick={goBack} className={secondaryButtonClass}>
-            Back
-          </Button>
+          <Button onClick={goBack} className={secondaryButtonClass}>Back</Button>
         </div>
 
-        <Form<StoreFormValues>
-          form={form}
-          initialValues={{ taxType: "SGST_CGST", taxPercent: 0 }}
-          layout="vertical"
-          requiredMark={false}
-          onFinish={handleSubmit}
-          className={formClassName}
-        >
+        <Form<StoreFormValues> form={form} initialValues={{ taxType: "SGST_CGST", taxPercent: 0 }} layout="vertical" requiredMark={false} onFinish={handleSubmit} className={formClassName} >
           <Row gutter={[18, 4]}>
             <Col xs={24} md={12}>
-              <Form.Item
-                label={requiredLabel("Name")}
-                name="name"
-                rules={[{ required: true, message: "Please enter name" }, { min: 3, message: "Must be at least 3 characters" }]}
-              >
+              <Form.Item label={requiredLabel("Name")} name="name" rules={[{ required: true, message: "Please enter name" }, { min: 3, message: "Must be at least 3 characters" }]}>
                 <Input placeholder="Name" className={inputClass} />
               </Form.Item>
             </Col>
 
             <Col xs={24} md={12}>
-              <Form.Item
-                label={requiredLabel("Tax Type")}
-                name="taxType"
-                rules={[{ required: true, message: "Please select tax type" }]}
-              >
-                <Select
-                  className={selectClass}
-                  placeholder="Select tax type"
-                  showSearch
-                  optionFilterProp="label"
+              <Form.Item label={requiredLabel("Tax Type")} name="taxType" rules={[{ required: true, message: "Please select tax type" }]}>
+                <Select className={selectClass} placeholder="Select tax type" showSearch optionFilterProp="label"
                   options={[
                     { value: "SGST_CGST", label: "SGST + CGST" },
                     { value: "IGST", label: "IGST" },
@@ -101,9 +61,7 @@ const AddMedicalStoreForm = () => {
             </Col>
 
             <Col xs={24} md={12}>
-              <Form.Item
-                label={requiredLabel(taxType === "IGST" ? "IGST (%)" : "GST (%)")}
-                name="taxPercent"
+              <Form.Item label={requiredLabel(taxType === "IGST" ? "IGST (%)" : "GST (%)")} name="taxPercent"
                 rules={[
                   { required: true, message: "Please enter tax percent" },
                   {
@@ -117,20 +75,12 @@ const AddMedicalStoreForm = () => {
                   },
                 ]}
               >
-                <Input
-                  type="number"
-                  min={0}
-                  max={100}
-                  placeholder={taxType === "IGST" ? "Enter IGST %" : "Enter GST %"}
-                  className={inputClass}
-                />
+                <Input type="number" min={0} max={100} placeholder={taxType === "IGST" ? "Enter IGST %" : "Enter GST %"} className={inputClass} />
               </Form.Item>
             </Col>
 
             <Col xs={24} md={12}>
-              <Form.Item
-                label={requiredLabel("GST Number")}
-                name="gstNumber"
+              <Form.Item label={requiredLabel("GST Number")} name="gstNumber"
                 rules={[
                   { required: true, message: "Please enter GST Number" },
                   {
@@ -147,9 +97,7 @@ const AddMedicalStoreForm = () => {
             </Col>
 
             <Col xs={24} md={12}>
-              <Form.Item
-                label={requiredLabel("PAN Number")}
-                name="panNumber"
+              <Form.Item label={requiredLabel("PAN Number")} name="panNumber"
                 rules={[
                   { required: true, message: "Please enter PAN Number" },
                   {
@@ -193,6 +141,38 @@ const AddMedicalStoreForm = () => {
               </Form.Item>
             </Col>
 
+            <Col xs={24} className="mt-5">
+            <Typography.Title level={3} className="mb-1 underline bg-gradient-to-r from-[#5a7e40] to-[#81ab63] bg-clip-text text-transparent"> Additional Company Details :</Typography.Title>
+            </Col>
+
+            <Col xs={24} md={12}>
+              <Form.Item label={optionalLabel("Default Company City")} name="defaultCompanyCity">
+                <Input placeholder="Default Company City" className={inputClass} />
+              </Form.Item>
+            </Col>
+
+            <Col xs={24} md={12}>
+              <Form.Item label={optionalLabel("Default Company State")} name="defaultCompanyState">
+                <Input placeholder="Default Company State" className={inputClass} />
+              </Form.Item>
+            </Col>
+
+            <Col xs={24} md={12}>
+              <Form.Item label={optionalLabel("Default Company Pincode")} name="defaultCompanyPincode">
+                <Input type="number" inputMode="numeric" placeholder="Default Company Pincode" maxLength={6} className={inputClass} />
+              </Form.Item>
+            </Col>
+
+            <Col xs={24}>
+              <Form.Item
+                label={optionalLabel("Default Company Address")}
+                name="defaultCompanyAddress"
+                rules={[{ min: 5, message: "Must be at least 5 characters" }]}
+              >
+                <Input placeholder="Default Company Address" className={inputClass} />
+              </Form.Item>
+            </Col>
+
             <Col xs={24}>
               <Form.Item label="Signature Image" name="signatureImg">
                 <div className="flex flex-wrap items-center gap-4">
@@ -232,12 +212,8 @@ const AddMedicalStoreForm = () => {
           </Row>
 
           <div className="flex flex-wrap justify-end gap-3 pt-2">
-            <Button onClick={goBack} className={secondaryButtonClass}>
-              Cancel
-            </Button>
-            <Button type="primary" htmlType="submit" loading={mutation.isPending} className="!h-12 !rounded-lg !px-9 !font-semibold">
-              {isEdit ? "Update Store" : "Add Store"}
-            </Button>
+            <Button onClick={goBack} className={secondaryButtonClass}>Cancel </Button>
+            <Button type="primary" htmlType="submit" loading={mutation.isPending} className="!h-12 !rounded-lg !px-9 !font-semibold"> {isEdit ? "Update Store" : "Add Store"}</Button>
           </div>
         </Form>
       </Card>

@@ -97,11 +97,6 @@ const MedicalStoreTable = () => {
       render: (value) => <Typography.Text>{value || "-"}</Typography.Text>,
     },
     {
-      title: "Created / Updated At",
-      key: "createdUpdated",
-      render: (_, record) => formatCreatedAndUpdatedAt(record.createdAt, record.updatedAt),
-    },
-    {
       title: "Location",
       key: "location",
       render: (_, record) => (
@@ -111,6 +106,11 @@ const MedicalStoreTable = () => {
           {record.state ? `, ${record.state}` : ""}
         </Typography.Text>
       ),
+    },
+    {
+      title: "Created / Updated At",
+      key: "createdUpdated",
+      render: (_, record) => formatCreatedAndUpdatedAt(record.createdAt, record.updatedAt),
     },
     {
       title: "Action",
@@ -178,48 +178,16 @@ const MedicalStoreTable = () => {
 
           {isAdmin && (
             <div className={tableToolbarActionWrapClass}>
-              <Button type="text" icon={<PlusOutlined />} className={tablePrimaryButtonClass} onClick={() => navigate(addStoreRoute)}>
-                Add Store
-              </Button>
+              <Button type="text" icon={<PlusOutlined />} className={tablePrimaryButtonClass} onClick={() => navigate(addStoreRoute)}> Add Store </Button>
             </div>
           )}
         </div>
       </div>
 
-      <Tabs
-        activeKey={statusTab}
-        onChange={(key) => setStatusTab(key as MedicalStoreStatusTab)}
-        className={tableTabClass}
-        items={storeStatusTabs}
-      />
-
-      <Table<MedicalStoreRecord>
-        dataSource={stores}
-        columns={columns}
-        rowKey="_id"
-        pagination={false}
-        locale={{ emptyText: <TableEmpty description="No medical stores found" /> }}
-        className={tableSurfaceClass}
-        scroll={{ x: "max-content" }}
-      />
-
-      <ServerPaginationControls
-        page={page}
-        limit={limit}
-        total={totalCount}
-        totalPages={totalPages}
-        currentCount={stores.length}
-        onPageChange={setPage}
-        onLimitChange={setLimit}
-      />
-
-      <ConfirmActiveStatusModal
-        open={pendingStatus.open}
-        nextIsActive={pendingStatus.nextIsActive}
-        countdown={pendingStatus.secondsLeft}
-        onConfirm={applyStatusChange}
-        onCancel={closeStatusModal}
-      />
+      <Tabs activeKey={statusTab} onChange={(key) => setStatusTab(key as MedicalStoreStatusTab)} className={tableTabClass} items={storeStatusTabs} />
+      <Table<MedicalStoreRecord> dataSource={stores} columns={columns} rowKey="_id" pagination={false} locale={{ emptyText: <TableEmpty description="No medical stores found" /> }} className={tableSurfaceClass} scroll={{ x: "max-content" }} />
+      <ServerPaginationControls page={page} limit={limit} total={totalCount} totalPages={totalPages} currentCount={stores.length} onPageChange={setPage} onLimitChange={setLimit} />
+      <ConfirmActiveStatusModal  open={pendingStatus.open}  nextIsActive={pendingStatus.nextIsActive}  countdown={pendingStatus.secondsLeft}  onConfirm={applyStatusChange}  onCancel={closeStatusModal} />
     </Card>
   );
 };

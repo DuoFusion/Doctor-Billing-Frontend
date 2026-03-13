@@ -2,15 +2,7 @@ import { PlusOutlined, SearchOutlined } from "@ant-design/icons";
 import { Button, DatePicker, Input, Select } from "antd";
 import type { Dayjs } from "dayjs";
 import { billDateRangePresets } from "../../../hooks";
-import {
-  tableHeaderClass,
-  tableInputClass,
-  tablePrimaryButtonClass,
-  tableSelectClass,
-  tableToolbarActionWrapClass,
-  tableToolbarFiltersClass,
-  tableToolbarLayoutClass,
-} from "../table/themeClasses";
+import { tableHeaderClass, tableInputClass, tablePrimaryButtonClass, tableSelectClass, tableToolbarActionWrapClass, tableToolbarFiltersClass, tableToolbarLayoutClass,} from "../table/themeClasses";
 
 const { RangePicker } = DatePicker;
 

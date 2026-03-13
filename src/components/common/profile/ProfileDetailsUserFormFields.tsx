@@ -21,25 +21,12 @@ type Props = {
 const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
 const gstRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/;
 
-const ProfileDetailsUserFormFields = ({
-  selectedMedicalStoreId,
-  isMedicalStoreLoading,
-  medicalStore,
-  taxType,
-  existingSignatureUrl,
-  signatureFileList,
-  onUppercaseChange,
-  onSignatureChange,
-  onSignatureUpload,
-  onRemoveSignature,
-}: Props) => {
+const ProfileDetailsUserFormFields = ({ selectedMedicalStoreId, isMedicalStoreLoading, medicalStore, taxType, existingSignatureUrl, signatureFileList, onUppercaseChange, onSignatureChange, onSignatureUpload, onRemoveSignature,}: Props) => {
   const personalInfoTab = (
     <div className="px-4 pb-5 pt-1 sm:px-6 sm:pb-6">
       <Row gutter={[16, 0]}>
         <Col xs={24} md={12}>
-          <Form.Item
-            label="Name"
-            name="name"
+          <Form.Item label="Name" name="name"
             rules={[
               { required: true, whitespace: true, message: "Please enter name" },
               {
@@ -56,9 +43,7 @@ const ProfileDetailsUserFormFields = ({
         </Col>
 
         <Col xs={24} md={12}>
-          <Form.Item
-            label="Email Address"
-            name="email"
+          <Form.Item label="Email Address" name="email"
             rules={[
               { required: true, message: "Please enter email address" },
               { type: "email", message: "Enter a valid email address" },
@@ -69,9 +54,7 @@ const ProfileDetailsUserFormFields = ({
         </Col>
 
         <Col xs={24} md={12}>
-          <Form.Item
-            label="Phone Number"
-            name="phone"
+          <Form.Item label="Phone Number" name="phone"
             rules={[{ required: true, message: "Please enter phone number" }]}
           >
             <Input type="number" inputMode="numeric" placeholder="Enter 10 digit phone number" />
@@ -84,22 +67,16 @@ const ProfileDetailsUserFormFields = ({
   const medicalStoreInfoTab = (
     <div className="px-4 pb-5 pt-1 sm:px-6 sm:pb-6">
       {!selectedMedicalStoreId && (
-        <Typography.Text className="!mb-4 !block !text-[13px] !text-[#9a4e34]">
-          No medical store is linked to this user.
-        </Typography.Text>
+        <Typography.Text className="!mb-4 !block !text-[13px] !text-[#9a4e34]"> No medical store is linked to this user. </Typography.Text>
       )}
 
       {isMedicalStoreLoading && (
-        <Typography.Text className="!mb-4 !block !text-[13px] !text-[#6d8060]">
-          Loading medical store information...
-        </Typography.Text>
+        <Typography.Text className="!mb-4 !block !text-[13px] !text-[#6d8060]"> Loading medical store information...</Typography.Text>
       )}
 
       <Row gutter={[16, 0]}>
         <Col xs={24} md={12}>
-          <Form.Item
-            label="Name"
-            name="storeName"
+          <Form.Item label="Name" name="storeName"
             rules={
               selectedMedicalStoreId
                 ? [
@@ -121,16 +98,10 @@ const ProfileDetailsUserFormFields = ({
         </Col>
 
         <Col xs={24} md={12}>
-          <Form.Item
-            label="Tax Type"
-            name="taxType"
+          <Form.Item label="Tax Type" name="taxType"
             rules={selectedMedicalStoreId ? [{ required: true, message: "Please select tax type" }] : []}
           >
-            <Select
-              placeholder="Select tax type"
-              disabled={!selectedMedicalStoreId}
-              showSearch
-              optionFilterProp="label"
+            <Select placeholder="Select tax type" disabled={!selectedMedicalStoreId} showSearch optionFilterProp="label"
               options={[
                 { value: "SGST_CGST", label: "SGST + CGST" },
                 { value: "IGST", label: "IGST" },
@@ -140,9 +111,7 @@ const ProfileDetailsUserFormFields = ({
         </Col>
 
         <Col xs={24} md={12}>
-          <Form.Item
-            label={taxType === "IGST" ? "IGST (%)" : "GST (%)"}
-            name="taxPercent"
+          <Form.Item label={taxType === "IGST" ? "IGST (%)" : "GST (%)"} name="taxPercent"
             rules={
               selectedMedicalStoreId
                 ? [
@@ -160,20 +129,12 @@ const ProfileDetailsUserFormFields = ({
                 : []
             }
           >
-            <Input
-              type="number"
-              min={0}
-              max={100}
-              placeholder={taxType === "IGST" ? "Enter IGST %" : "Enter GST %"}
-              disabled={!selectedMedicalStoreId}
-            />
+            <Input type="number" min={0} max={100} placeholder={taxType === "IGST" ? "Enter IGST %" : "Enter GST %"} disabled={!selectedMedicalStoreId}/>
           </Form.Item>
         </Col>
 
         <Col xs={24} md={12}>
-          <Form.Item
-            label="GST Number"
-            name="gstNumber"
+          <Form.Item label="GST Number" name="gstNumber"
             rules={
               selectedMedicalStoreId
                 ? [
@@ -190,19 +151,12 @@ const ProfileDetailsUserFormFields = ({
                 : []
             }
           >
-            <Input
-              placeholder="GST Number"
-              disabled={!selectedMedicalStoreId}
-              maxLength={15}
-              onChange={onUppercaseChange("gstNumber")}
-            />
+            <Input  placeholder="GST Number"  disabled={!selectedMedicalStoreId}  maxLength={15}  onChange={onUppercaseChange("gstNumber")} />
           </Form.Item>
         </Col>
 
         <Col xs={24} md={12}>
-          <Form.Item
-            label="PAN Number"
-            name="panNumber"
+          <Form.Item label="PAN Number" name="panNumber"
             rules={
               selectedMedicalStoreId
                 ? [
@@ -219,12 +173,7 @@ const ProfileDetailsUserFormFields = ({
                 : []
             }
           >
-            <Input
-              placeholder="PAN Number"
-              disabled={!selectedMedicalStoreId}
-              maxLength={10}
-              onChange={onUppercaseChange("panNumber")}
-            />
+            <Input placeholder="PAN Number" disabled={!selectedMedicalStoreId} maxLength={10} onChange={onUppercaseChange("panNumber")} />
           </Form.Item>
         </Col>
 
@@ -255,49 +204,69 @@ const ProfileDetailsUserFormFields = ({
     </div>
   );
 
+  const additionalCompanyInfoTab = (
+    <div className="px-4 pb-5 pt-1 sm:px-6 sm:pb-6">
+      {!selectedMedicalStoreId && (
+        <Typography.Text className="!mb-4 !block !text-[13px] !text-[#9a4e34]"> No medical store is linked to this user .</Typography.Text>
+      )}
+
+      {isMedicalStoreLoading && (
+        <Typography.Text className="!mb-4 !block !text-[13px] !text-[#6d8060]"> Loading default company information...</Typography.Text>
+      )}
+
+      <Row gutter={[16, 0]}>
+        <Col xs={24} md={12}>
+          <Form.Item label="Default Company City" name="defaultCompanyCity">
+            <Input placeholder="Default Company City" disabled={!selectedMedicalStoreId} />
+          </Form.Item>
+        </Col>
+
+        <Col xs={24} md={12}>
+          <Form.Item label="Default Company State" name="defaultCompanyState">
+            <Input placeholder="Default Company State" disabled={!selectedMedicalStoreId} />
+          </Form.Item>
+        </Col>
+
+        <Col xs={24} md={12}>
+          <Form.Item label="Default Company Pincode" name="defaultCompanyPincode">
+            <Input type="number" inputMode="numeric" placeholder="Default Company Pincode" disabled={!selectedMedicalStoreId}/>
+          </Form.Item>
+        </Col>
+
+        <Col xs={24}>
+          <Form.Item label="Default Company Address" name="defaultCompanyAddress" rules={[{ min: 5, message: "Default company address must be at least 5 characters" }]}>
+            <Input.TextArea placeholder="Default Company Address" rows={3} disabled={!selectedMedicalStoreId} />
+          </Form.Item>
+        </Col>
+      </Row>
+    </div>
+  );
+
   const documentsTab = (
     <div className="px-4 pb-5 pt-1 sm:px-6 sm:pb-6">
       <Form.Item label="Signature Image" name="signatureImg">
-        <Upload
-          className="profile-doc-upload"
-          listType="picture"
-          fileList={signatureFileList}
-          onChange={onSignatureChange}
-          beforeUpload={onSignatureUpload}
-          maxCount={1}
-          accept="image/jpeg, image/png"
-        >
+        <Upload className="profile-doc-upload" listType="picture" fileList={signatureFileList} onChange={onSignatureChange} beforeUpload={onSignatureUpload} maxCount={1} accept="image/jpeg, image/png">
           <Button icon={<UploadOutlined />}>Upload Signature</Button>
         </Upload>
 
-        <Typography.Text className="!mt-2 block !text-[12px] !text-[#6d8060]">
-          Max file size: 5MB. Allowed formats: JPG, JPEG, PNG
-        </Typography.Text>
+        <Typography.Text className="!mt-2 block !text-[12px] !text-[#6d8060]"> Max file size: 5MB. Allowed formats: JPG, JPEG, PNG </Typography.Text>
 
         {signatureFileList.length > 0 && (
-          <Button type="link" className="!mt-1 !px-0" onClick={onRemoveSignature}>
-            Remove Signature
-          </Button>
+          <Button type="link" className="!mt-1 !px-0" onClick={onRemoveSignature}>Remove Signature</Button>
         )}
       </Form.Item>
 
       {existingSignatureUrl && (
         <div className="profile-signature-meta mt-4 rounded-lg bg-[#f5f5f5] p-3">
-          <Typography.Text className="!font-semibold !text-[#2d4620]">
-            Current Signature File:
-          </Typography.Text>
+          <Typography.Text className="!font-semibold !text-[#2d4620]">  Current Signature File: </Typography.Text>
           <div className="mt-2 flex flex-col gap-1">
             <Typography.Text className="!text-[13px]">
               <strong>Filename:</strong>{" "}
-              {medicalStore?.signatureImg?.originalName ||
-                medicalStore?.signatureImg?.filename ||
-                "-"}
+              {medicalStore?.signatureImg?.originalName || medicalStore?.signatureImg?.filename || "-"}
             </Typography.Text>
             <Typography.Text className="!text-[13px]">
               <strong>Size:</strong>{" "}
-              {medicalStore?.signatureImg?.size
-                ? `${(medicalStore.signatureImg.size / 1024).toFixed(2)} KB`
-                : "-"}
+              {medicalStore?.signatureImg?.size ? `${(medicalStore.signatureImg.size / 1024).toFixed(2)} KB` : "-"}
             </Typography.Text>
           </div>
         </div>
@@ -317,6 +286,11 @@ const ProfileDetailsUserFormFields = ({
       children: medicalStoreInfoTab,
     },
     {
+      key: "additional-company",
+      label: <span className="profile-tab-label">Additional Company Information</span>,
+      children: additionalCompanyInfoTab,
+    },
+    {
       key: "documents",
       label: <span className="profile-tab-label">Documents</span>,
       children: documentsTab,
@@ -324,12 +298,7 @@ const ProfileDetailsUserFormFields = ({
   ];
 
   return (
-    <Tabs
-      defaultActiveKey="personal"
-      className="profile-settings-tabs"
-      items={tabItems}
-      animated={{ inkBar: true, tabPane: false }}
-    />
+    <Tabs defaultActiveKey="personal" className="profile-settings-tabs" items={tabItems} animated={{ inkBar: true, tabPane: false }} />
   );
 };
 

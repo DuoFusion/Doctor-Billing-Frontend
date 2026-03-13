@@ -5,18 +5,13 @@ import { getCompanyLogoUrl } from "../../../utils/uploadsUrl";
 import { type CompanyFormValues, useCompanyForm } from "../../../hooks";
 
 const requiredLabel = (label: string, isRequired = true) => (
-  <span className="font-medium text-[#607257]">
-    {label}
-    {isRequired && <span className="ml-1 text-red-500">*</span>}
-  </span>
+  <span className="font-medium text-[#607257]">{label} {isRequired && <span className="ml-1 text-red-500">*</span>}</span>
 );
 
 const inputClass = "!h-11 !rounded-lg";
 const selectClass = "!w-full [&_.ant-select-selector]:!h-11 [&_.ant-select-selector]:!rounded-lg [&_.ant-select-selection-item]:!leading-[42px] [&_.ant-select-selection-placeholder]:!leading-[42px]";
-const formClassName =
-  "app-form [&_.ant-form-item]:!mb-6 [&_.ant-form-item-explain-error]:!mt-1.5 [&_.ant-form-item-label>label]:!text-[13px]";
-const secondaryButtonClass =
-  "!h-11 !rounded-lg !border-[#cfe4b7] !bg-[#f7fde8] !px-6 !text-[#4f6841] hover:!border-[#b8d69a] hover:!bg-[#ebffd8] hover:!text-[#3a592b]";
+const formClassName = "app-form [&_.ant-form-item]:!mb-6 [&_.ant-form-item-explain-error]:!mt-1.5 [&_.ant-form-item-label>label]:!text-[13px]";
+const secondaryButtonClass =  "!h-11 !rounded-lg !border-[#cfe4b7] !bg-[#f7fde8] !px-6 !text-[#4f6841] hover:!border-[#b8d69a] hover:!bg-[#ebffd8] hover:!text-[#3a592b]";
 
 const AddCompanyForm = () => {
   const [form] = Form.useForm<CompanyFormValues>();
@@ -50,44 +45,18 @@ const AddCompanyForm = () => {
       <Card className="app-form-card rounded-2xl">
         <div className="mb-7 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
           <div>
-            <Typography.Title level={3} className="mb-1 bg-gradient-to-r from-[#5a7e40] to-[#81ab63] bg-clip-text text-transparent">
-              {isEdit ? "Update Company" : "Add Company"}
-            </Typography.Title>
-            <Typography.Text className="text-[#6d8060]">
-              Maintain complete company profile details for billing and management.
-            </Typography.Text>
+            <Typography.Title level={3} className="mb-1 bg-gradient-to-r from-[#5a7e40] to-[#81ab63] bg-clip-text text-transparent"> {isEdit ? "Update Company" : "Add Company"} </Typography.Title>
+            <Typography.Text className="text-[#6d8060]"> Maintain complete company profile details for billing and management.</Typography.Text>
           </div>
-          <Button
-            onClick={goBack}
-            className={secondaryButtonClass}
-          >
-            Back
-          </Button>
+          <Button onClick={goBack} className={secondaryButtonClass}>Back</Button>
         </div>
 
-        <Form<CompanyFormValues>
-          form={form}
-          layout="vertical"
-          requiredMark={false}
-          onFinish={handleSubmit}
-          className={formClassName}
-        >
+        <Form<CompanyFormValues> form={form} layout="vertical" requiredMark={false} onFinish={handleSubmit} className={formClassName}>
           <Row gutter={[18, 4]}>
             {isAdmin && (
               <Col xs={24} md={12}>
-                <Form.Item
-                  label={requiredLabel("Assign User")}
-                  name="userId"
-                  rules={[{ required: true, message: "Please select user" }]}
-                >
-                  <Select
-                    showSearch
-                    optionFilterProp="label"
-                    placeholder="Select User"
-                    options={userOptions}
-                    className={selectClass}
-                    loading={isUsersLoading}
-                  />
+                <Form.Item label={requiredLabel("Assign User")} name="userId" rules={[{ required: true, message: "Please select user" }]}>
+                  <Select showSearch optionFilterProp="label" placeholder="Select User" options={userOptions} className={selectClass} loading={isUsersLoading} />
                 </Form.Item>
               </Col>
             )}
@@ -122,11 +91,7 @@ const AddCompanyForm = () => {
             </Col>
 
             <Col xs={24} md={12}>
-              <Form.Item
-                label={requiredLabel("Phone Number")}
-                name="phone"
-                rules={[{ required: true, message: "Please enter phone number" }]}
-              >
+              <Form.Item label={requiredLabel("Phone Number")} name="phone" rules={[{ required: true, message: "Please enter phone number" }]}>
                 <Input type="number" inputMode="numeric" placeholder="Phone Number" maxLength={10} className={inputClass} />
               </Form.Item>
             </Col>
@@ -144,28 +109,19 @@ const AddCompanyForm = () => {
             </Col>
 
             <Col xs={24} md={12}>
-              <Form.Item
-                label={requiredLabel("City", false)}
-                name="city"
-              >
+              <Form.Item label={requiredLabel("City", false)} name="city">
                 <Input placeholder="City" className={inputClass} />
               </Form.Item>
             </Col>
 
             <Col xs={24} md={12}>
-              <Form.Item
-                label={requiredLabel("State", false)}
-                name="state"
-              >
+              <Form.Item label={requiredLabel("State", false)} name="state" >
                 <Input placeholder="State" className={inputClass} />
               </Form.Item>
             </Col>
 
             <Col xs={24} md={12}>
-              <Form.Item
-                label={requiredLabel("Pincode", false)}
-                name="pincode"
-              >
+              <Form.Item label={requiredLabel("Pincode", false)} name="pincode">
                 <Input type="number" inputMode="numeric" placeholder="Pincode" maxLength={6} className={inputClass} />
               </Form.Item>
             </Col>
@@ -193,12 +149,7 @@ const AddCompanyForm = () => {
                     maxCount={1}
                     showUploadList={{ showRemoveIcon: true }}
                   >
-                    <Button
-                      icon={<UploadOutlined />}
-                      className={secondaryButtonClass}
-                    >
-                      Select Logo
-                    </Button>
+                    <Button icon={<UploadOutlined />} className={secondaryButtonClass}>Select Logo</Button>
                   </Upload>
 
                   {logo ? (
@@ -216,15 +167,8 @@ const AddCompanyForm = () => {
           </Row>
 
           <div className="flex flex-wrap justify-end gap-3 pt-2">
-            <Button
-              onClick={goBack}
-              className={secondaryButtonClass}
-            >
-              Cancel
-            </Button>
-            <Button type="primary" htmlType="submit" loading={mutation.isPending} className="!h-12 !rounded-lg !px-9 !font-semibold">
-              {isEdit ? "Update Company" : "Add Company"}
-            </Button>
+            <Button onClick={goBack} className={secondaryButtonClass} > Cancel</Button>
+            <Button type="primary" htmlType="submit" loading={mutation.isPending} className="!h-12 !rounded-lg !px-9 !font-semibold"> {isEdit ? "Update Company" : "Add Company"} </Button>
           </div>
         </Form>
       </Card>

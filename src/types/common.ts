@@ -55,6 +55,10 @@ export type MedicalStoreRecord = {
   city?: string;
   state?: string;
   pincode?: string | number;
+  defaultCompanyAddress?: string;
+  defaultCompanyCity?: string;
+  defaultCompanyState?: string;
+  defaultCompanyPincode?: string | number;
   signatureImg?: any;
   isActive?: boolean;
   createdAt?: string;
@@ -77,6 +81,10 @@ export type StoreFormValues = {
   state: string;
   pincode: string;
   address: string;
+  defaultCompanyAddress?: string;
+  defaultCompanyCity?: string;
+  defaultCompanyState?: string;
+  defaultCompanyPincode?: string;
   signatureImg?: any;
   removeSignature?: boolean;
 };

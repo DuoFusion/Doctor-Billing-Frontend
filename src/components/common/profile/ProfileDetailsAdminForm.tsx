@@ -10,20 +10,16 @@ import { getCurrentUserRecord, syncCurrentUserCache, useCurrentUser } from "../.
 import type { CurrentUserProfile, ProfileFormValues, ProfileUpdateResponse } from "../../../types";
 import { notify } from "../../../utils/notify";
 
-const resolveTextValue = (nextValue: string | undefined, existingValue: string | undefined) =>
-  (nextValue ?? existingValue ?? "").trim();
+const resolveTextValue = (nextValue: string | undefined, existingValue: string | undefined) =>(nextValue ?? existingValue ?? "").trim();
 
-const syncProfileForm = (
-  form: ReturnType<typeof Form.useForm<ProfileFormValues>>[0],
-  user?: CurrentUserProfile
-) => {
+const syncProfileForm = ( form: ReturnType<typeof Form.useForm<ProfileFormValues>>[0],user?: CurrentUserProfile ) => {
   form.setFieldsValue({
     name: user?.name || "",
     email: user?.email || "",
     phone: user?.phone || "",
   });
 };
-
+// ================== Personal Information tab ==================
 const personalInfoTab: TabsProps["items"] = [
   {
     key: "personal",
@@ -32,9 +28,7 @@ const personalInfoTab: TabsProps["items"] = [
       <div className="px-4 pb-5 pt-1 sm:px-6 sm:pb-6">
         <Row gutter={[16, 0]}>
           <Col xs={24} md={12}>
-            <Form.Item
-              label="Name"
-              name="name"
+            <Form.Item label="Name" name="name"
               rules={[
                 { required: true, message: "Please enter name" },
                 { min: 3, message: "Name must be at least 3 characters" },
@@ -45,9 +39,7 @@ const personalInfoTab: TabsProps["items"] = [
           </Col>
 
           <Col xs={24} md={12}>
-            <Form.Item
-              label="Email Address"
-              name="email"
+            <Form.Item label="Email Address" name="email"
               rules={[
                 { required: true, message: "Please enter email address" },
                 { type: "email", message: "Enter a valid email address" },
@@ -58,9 +50,7 @@ const personalInfoTab: TabsProps["items"] = [
           </Col>
 
           <Col xs={24} md={12}>
-            <Form.Item
-              label="Phone Number"
-              name="phone"
+            <Form.Item label="Phone Number" name="phone"
               rules={[{ required: true, message: "Please enter phone number" }]}
             >
               <Input type="number" inputMode="numeric" placeholder="Enter 10 digit phone number" />
@@ -119,54 +109,18 @@ const ProfileDetailsAdminForm = () => {
   };
 
   return (
-    <Card
-      className="!rounded-xl !border-[#d9e7c8] !bg-[#fefffc]"
-      style={{ boxShadow: "none", textShadow: "none" }}
-      styles={{ body: { padding: 0 } }}
-      loading={isLoading}
-    >
+    <Card className="!rounded-xl !border-[#d9e7c8] !bg-[#fefffc]" style={{ boxShadow: "none", textShadow: "none" }} styles={{ body: { padding: 0 } }} loading={isLoading}>
       <div className="border-b border-[#e3edd9] px-4 py-4 sm:px-6">
-        <Typography.Title level={5} className="!mb-1 !text-[#2d4620]">
-          Profile Settings
-        </Typography.Title>
-        <Typography.Text className="!text-[13px] !text-[#6d8060]">
-          Keep your account information up to date.
-        </Typography.Text>
+        <Typography.Title level={5} className="!mb-1 !text-[#2d4620]">Profile Settings</Typography.Title>
+        <Typography.Text className="!text-[13px] !text-[#6d8060]"> Keep your account information up to date.</Typography.Text>
       </div>
 
-      <Form<ProfileFormValues>
-        form={form}
-        layout="vertical"
-        onFinish={handleFinish}
-        requiredMark={false}
-        className="profile-settings-form"
-      >
-        <Tabs
-          defaultActiveKey="personal"
-          className="profile-settings-tabs"
-          items={personalInfoTab}
-          animated={{ inkBar: true, tabPane: false }}
-        />
+      <Form<ProfileFormValues> form={form} layout="vertical" onFinish={handleFinish} requiredMark={false} className="profile-settings-form">
+        <Tabs defaultActiveKey="personal" className="profile-settings-tabs" items={personalInfoTab} animated={{ inkBar: true, tabPane: false }}/>
 
         <div className="flex flex-wrap gap-3 border-t border-[#e3edd9] px-4 pb-5 pt-1 sm:px-6 sm:pb-6">
-          <Button
-            type="primary"
-            htmlType="submit"
-            loading={mutation.isPending}
-            className="!h-10 !rounded-lg !px-7 !font-semibold"
-            style={{ boxShadow: "none" }}
-          >
-            Update Profile
-          </Button>
-
-          <Button
-            type="default"
-            onClick={() => navigate(ROUTES.AUTH.CHANGE_PASSWORD)}
-            className="!h-10 !rounded-lg !px-5 !font-semibold"
-            style={{ boxShadow: "none" }}
-          >
-            Change Password
-          </Button>
+          <Button type="primary" htmlType="submit" loading={mutation.isPending} className="!h-10 !rounded-lg !px-7 !font-semibold" style={{ boxShadow: "none" }}> Update Profile</Button>
+          <Button type="default" onClick={() => navigate(ROUTES.AUTH.CHANGE_PASSWORD)} className="!h-10 !rounded-lg !px-5 !font-semibold" style={{ boxShadow: "none" }}>Change Password</Button>
         </div>
       </Form>
     </Card>

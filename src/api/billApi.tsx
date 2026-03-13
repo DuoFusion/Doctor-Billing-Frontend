@@ -3,22 +3,6 @@ import { createApiClient } from "./client";
 
 const API = createApiClient();
 
-// ============ Get All Bills ============
-export const getAllBills = async (params?: {
-  page?: number;
-  limit?: number;
-  search?: string;
-  fromDate?: string;
-  toDate?: string;
-  quickDate?: "today" | "yesterday" | "tomorrow";
-  medicalStoreId?: string;
-  companyId?: string;
-  isActive?: boolean;
-}) => {
-  const response = await API.get(URL_KEYS.BILL.GET_BILLS, { params });
-  return response.data;
-};
-
 // ============ Get All Bills (With Query Filters) ============
 export const getAllBillsByQuery = async (params: {
   page?: number;

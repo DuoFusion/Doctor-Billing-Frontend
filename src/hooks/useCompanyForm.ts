@@ -1,7 +1,7 @@
 import { Form } from "antd";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { addCompany, getCompanyById, updateCompany } from "../api";
 import { ROUTES } from "../constants/Routes";
@@ -10,6 +10,7 @@ import { resolveUserMedicalStoreId } from "../utils/medicalStoreScope";
 import type { CompanyFormValues, CompanyRecord } from "../types";
 import { useCurrentUser, useUsers, buildUserOptions } from "./useUsers";
 import { getCompanyScope, setCompanyFormValues } from "./useCompanies";
+import { useMedicalStoreDetails } from "./useMedicalStores";
 
 // ============ Company form query and mutation logic ============
 export const useCompanyForm = (form: ReturnType<typeof Form.useForm<CompanyFormValues>>[0]) => {
@@ -52,6 +53,43 @@ export const useCompanyForm = (form: ReturnType<typeof Form.useForm<CompanyFormV
     [companyData, currentUserId, currentUserMedicalStoreId, isAdmin, isEdit, selectedUserId, users]
   );
 
+  const { data: medicalStoreDefaults } = useMedicalStoreDetails(medicalStoreId, {enabled: !isEdit && Boolean(medicalStoreId),});
+
+  const lastAppliedDefaultsRef = useRef({
+    address: "",
+    city: "",
+    state: "",
+    pincode: "",
+  });
+
+  useEffect(() => {
+    if (isEdit || !medicalStoreDefaults) return;
+
+    const currentValues = form.getFieldsValue(["address", "city", "state", "pincode"]);
+    const lastApplied = lastAppliedDefaultsRef.current;
+    const nextDefaults = {
+      address: medicalStoreDefaults.defaultCompanyAddress || "",
+      city: medicalStoreDefaults.defaultCompanyCity || "",
+      state: medicalStoreDefaults.defaultCompanyState || "",
+      pincode: String(medicalStoreDefaults.defaultCompanyPincode || ""),
+    };
+    const nextValues: Partial<CompanyFormValues> = {};
+
+    const canReplace = (current: string | undefined, previous: string) =>
+      !current || String(current) === String(previous);
+
+    if (canReplace(currentValues.address, lastApplied.address)) nextValues.address = nextDefaults.address;
+    if (canReplace(currentValues.city, lastApplied.city)) nextValues.city = nextDefaults.city;
+    if (canReplace(currentValues.state, lastApplied.state)) nextValues.state = nextDefaults.state;
+    if (canReplace(currentValues.pincode, lastApplied.pincode)) nextValues.pincode = nextDefaults.pincode;
+
+    if (Object.keys(nextValues).length > 0) {
+      form.setFieldsValue(nextValues);
+    }
+
+    lastAppliedDefaultsRef.current = nextDefaults;
+  }, [form, isEdit, medicalStoreDefaults]);
+
   const mutation = useMutation({
     mutationFn: (payload: CompanyFormValues & { logo?: File | null; userId?: string }) =>
       isEdit && id ? updateCompany(id, payload) : addCompany(payload),
@@ -70,11 +108,7 @@ export const useCompanyForm = (form: ReturnType<typeof Form.useForm<CompanyFormV
       if (axios.isAxiosError(error)) {
         const apiError = error.response?.data?.error;
         const fallbackError =
-          typeof apiError === "string"
-            ? apiError
-            : typeof apiError?.message === "string"
-              ? apiError.message
-              : "";
+          typeof apiError === "string" ? apiError : typeof apiError?.message === "string" ? apiError.message  : "";
 
         notify.error(error.response?.data?.message || fallbackError || "Something went wrong");
         return;

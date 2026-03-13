@@ -109,6 +109,12 @@
   .profile-theme .profile-settings-tabs .ant-tabs-tab {
     padding: 11px 0 !important;
   }
+
+  .profile-theme .profile-settings-tabs .ant-tabs-content-holder {
+    max-height: calc(100vh - 320px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 .profile-theme .profile-settings-form .ant-form-item {

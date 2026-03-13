@@ -70,7 +70,7 @@ const InvoiceBill = () => {
             <div className="invoice-meta">
               <h1>INVOICE</h1>
               <p>Bill No: {billRecord.billNumber || "-"}</p>
-              <p> Date: {billRecord.purchaseDate ? new Date(billRecord.purchaseDate).toLocaleDateString() : "-"}</p>
+              <p> Date: {billRecord.purchaseDate ? new Date(billRecord.purchaseDate).toLocaleDateString("en-GB") : "-"}</p>
             </div>
 
             <div className="info-card">

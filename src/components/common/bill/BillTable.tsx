@@ -121,12 +121,7 @@ const BillTable = () => {
     {
       title: "Date",
       key: "date",
-      render: (_, bill) => (bill.createdAt ? dayjs(bill.createdAt).format("MM/DD/YYYY") : "-"),
-    },
-    {
-      title: "Created / Updated At",
-      key: "createdUpdated",
-      render: (_, bill) => formatCreatedAndUpdatedAt(bill.createdAt, bill.updatedAt),
+      render: (_, bill) => (bill.purchaseDate ? dayjs(bill.purchaseDate).format("DD/MM/YYYY") : "-"),
     },
     {
       title: "Total GST",
@@ -138,15 +133,6 @@ const BillTable = () => {
       key: "items",
       render: (_, bill) => bill.items?.length || 0,
     },
-    ...(isAdmin
-      ? [
-          {
-            title: "Added By",
-            key: "addedBy",
-            render: (_: unknown, bill: BillRecord) => renderNameEmail(getBillAddedByName(bill), getBillAddedByEmail(bill)),
-          },
-        ]
-      : []),
     {
       title: "Sub Total",
       key: "subTotal",
@@ -164,6 +150,20 @@ const BillTable = () => {
           {toCurrency(bill.grandTotal)}
         </Typography.Text>
       ),
+    },
+    ...(isAdmin
+      ? [
+          {
+            title: "Added By",
+            key: "addedBy",
+            render: (_: unknown, bill: BillRecord) => renderNameEmail(getBillAddedByName(bill), getBillAddedByEmail(bill)),
+          },
+        ]
+    : []),
+    {
+      title: "Created / Updated At",
+      key: "createdUpdated",
+      render: (_, bill) => formatCreatedAndUpdatedAt(bill.createdAt, bill.updatedAt),
     },
     {
       title: "View Invoice",

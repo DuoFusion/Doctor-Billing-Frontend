@@ -2,17 +2,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
 import html2pdf from "html2pdf.js";
-import { getBillById, getAllBills } from "../api";
+import { getBillById } from "../api";
 import { getCompanyLogoUrl, getSignatureImageUrl } from "../utils/uploadsUrl";
 import type { BillItemRecord, BillRecord, CompanyRecord, MedicalStoreRecord, UserRecord } from "../types";
-
-// ============ Bills by medical store ============
-export const useBills = (medicalStoreId: string, enabled = true) =>
-  useQuery({
-    queryKey: ["bills", "dashboard", medicalStoreId],
-    queryFn: () => getAllBills({ medicalStoreId: medicalStoreId || undefined }),
-    enabled,
-  });
 
 // ============ Normalize bill API response ============
 export const unwrapBillRecord = (value: unknown): BillRecord | null => {

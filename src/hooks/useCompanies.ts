@@ -13,10 +13,14 @@ import { getCompanyLogoUrl } from "../utils/uploadsUrl";
 import { useConfirm } from "../components/common/confirm/ConfirmProvider";
 
 // ============ Companies by medical store ============
-export const useCompanies = (medicalStoreId: string, enabled = Boolean(medicalStoreId)) =>
+export const useCompanies = (
+  medicalStoreId: string,
+  enabled = Boolean(medicalStoreId),
+  includeAll = false
+) =>
   useQuery({
-    queryKey: ["companies", medicalStoreId],
-    queryFn: () => getAllCompaniesByQuery({ medicalStoreId: medicalStoreId || undefined, all: true }),
+    queryKey: ["companies", includeAll ? "all" : medicalStoreId],
+    queryFn: () => getAllCompaniesByQuery( includeAll ? { all: true } : { medicalStoreId: medicalStoreId || undefined, all: true }),
     enabled,
     placeholderData: keepPreviousData,
   });
