@@ -80,7 +80,7 @@ const MainDashboard = () => {
     { title: "Total Bills", value: stats.bills ?? 0, icon: Receipt },
     { title: "Paid Bills", value: stats.paidBills ?? 0, icon: CircleDollarSign },
     { title: "Due Bills", value: stats.dueBills ?? 0, icon: HandCoins },
-    { title: "Total Amount", value: formatAmount(totalBillAmount), icon: Tags },
+    { title: "Amount", value: formatAmount(totalBillAmount), icon: Tags },
     { title: "Paid Amount", value: formatAmount(stats.paidAmount), icon: CircleDollarSign },
     { title: "Due Amount", value: formatAmount(stats.dueAmount), icon: HandCoins },
   ];
@@ -89,7 +89,7 @@ const MainDashboard = () => {
     { title: "Financial", value: stats.financials ?? 0, icon: Receipt },
     { title: "Income", value: stats.incomeCount ?? 0, icon: CircleDollarSign },
     { title: "Expense", value: stats.expenseCount ?? 0, icon: HandCoins },
-    { title: "Total Financial Amount", value: formatAmount(stats.financialAmount), icon: Tags },
+    { title: "Profit", value: formatAmount(stats.financialAmount), icon: Tags },
     { title: "Income Amount", value: formatAmount(stats.incomeAmount), icon: CircleDollarSign },
     { title: "Expense Amount", value: formatAmount(stats.expenseAmount), icon: HandCoins },
   ];
