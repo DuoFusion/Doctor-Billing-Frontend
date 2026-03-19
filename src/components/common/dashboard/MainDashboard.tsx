@@ -86,10 +86,10 @@ const MainDashboard = () => {
   ];
 
   const financialCards = [
-    { title: "Financial", value: stats.financials ?? 0, icon: Receipt },
+    { title: "Profit", value: stats.financials ?? 0, icon: Receipt },
     { title: "Income", value: stats.incomeCount ?? 0, icon: CircleDollarSign },
     { title: "Expense", value: stats.expenseCount ?? 0, icon: HandCoins },
-    { title: "Profit", value: formatAmount(stats.financialAmount), icon: Tags },
+    { title: "Profit Amount", value: formatAmount(stats.financialAmount), icon: Tags },
     { title: "Income Amount", value: formatAmount(stats.incomeAmount), icon: CircleDollarSign },
     { title: "Expense Amount", value: formatAmount(stats.expenseAmount), icon: HandCoins },
   ];
