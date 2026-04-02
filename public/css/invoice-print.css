@@ -21,18 +21,21 @@
   }
 
   .invoice-page {
-    position: absolute;
-    left: 0;
-    top: 0;
     width: 210mm;
-    height: 297mm;
+    min-height: 297mm;
     margin: 0 !important;
     padding: 0;
     background: #ffffff;
-    overflow: hidden;
+    overflow: visible;
   }
 
-  .invoice-page + .button-wrapper {
+  .invoice-print-page:not(:last-child) {
+    page-break-after: always;
+    break-after: page;
+  }
+
+  .invoice-page + .button-wrapper,
+  .invoice-export-shell + .button-wrapper {
     display: none;
   }
 
@@ -40,14 +43,45 @@
     width: 100%;
     height: 100%;
     margin: 0;
-    padding: 0 10px 10px;
+    padding: 0 10px 14px;
     border: 1px solid #d9dee8;
     border-radius: 0;
+    position: relative;
+    box-sizing: border-box;
+    overflow: visible;
+  }
+
+  .invoice-page.invoice-screen-only {
+    min-height: auto;
+    height: auto;
+    overflow: visible;
+  }
+
+  .invoice-page.invoice-screen-only .invoice-wrapper {
+    height: auto;
+    overflow: visible;
+  }
+
+  .invoice-print-wrapper {
+    padding-bottom: 24px;
+  }
+
+  .invoice-print-wrapper .invoice-accent-bar-bottom {
+    position: absolute;
+    left: -10px;
+    right: -10px;
+    bottom: 0;
+    margin: 0;
   }
 
   .invoice-accent-bar {
-    margin: 0 0 10px;
+    margin: 15px 0 15px;
     height: 11px;
+  }
+
+  .invoice-accent-bar-bottom {
+    height: 11px;
+    background: linear-gradient(90deg, #1e293b 0%, #1e293b 64%, #65a30d 64%, #84cc16 100%);
   }
 
   .invoice-header {
@@ -100,14 +134,18 @@
 
   .invoice-table {
     font-size: 8.8px;
+    width: 100%;
+    table-layout: fixed;
+    box-sizing: border-box;
   }
 
   .invoice-table th,
   .invoice-table td {
-    padding: 0 3px;
+    padding: 0 2px;
     line-height: 1;
     vertical-align: middle;
     height: 26px;
+    box-sizing: border-box;
   }
 
   .invoice-table td:nth-child(2) {
@@ -128,7 +166,8 @@
 
   .invoice-table tr,
   .summary,
-  .summary-row {
+  .summary-row,
+  .invoice-lower {
     page-break-inside: avoid;
     break-inside: avoid;
   }
@@ -193,6 +232,20 @@
     margin-top: 8px;
     padding-top: 6px;
     font-size: 9.5px;
+  }
+
+  .invoice-screen-only {
+    display: block !important;
+  }
+
+  .invoice-print-only {
+    display: none !important;
+  }
+
+  .invoice-continued {
+    font-size: 9.5px;
+    margin-top: 8px;
+    text-align: center;
   }
 }
 

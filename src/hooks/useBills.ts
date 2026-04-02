@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
-import html2pdf from "html2pdf.js";
+import { jsPDF } from "jspdf";
 import { getBillById } from "../api";
 import { getCompanyLogoUrl, getSignatureImageUrl } from "../utils/uploadsUrl";
 import type { BillItemRecord, BillRecord, CompanyRecord, MedicalStoreRecord, UserRecord } from "../types";
@@ -130,32 +130,35 @@ export const useBillDetails = () => {
         requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
       });
 
-      const worker = html2pdf()
-        .set({
-          margin: 0,
-          filename: `Invoice-${billRecord.billNumber}.pdf`,
-          image: { type: "jpeg", quality: 1 },
-          html2canvas: {
-            scale: 2,
-            useCORS: true,
-            backgroundColor: "#ffffff",
-            scrollX: 0,
-            scrollY: 0,
-            windowWidth: 1440,
-          },
-          pagebreak: { mode: ["css"] },
-          jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-        } as any)
-        .from(invoiceElement)
-        .toPdf();
+      const { default: html2canvas } = await import("html2canvas");
+      const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
 
-      const pdf = await worker.get("pdf");
-      const totalPages = pdf.internal.getNumberOfPages();
-      for (let page = totalPages; page > 1; page--) {
-        pdf.deletePage(page);
+      const pages = Array.from(invoiceElement.querySelectorAll<HTMLElement>(".invoice-print-page"));
+      const targetPages = pages.length ? pages : Array.from(invoiceElement.querySelectorAll<HTMLElement>(".invoice-page"));
+
+      for (let i = 0; i < targetPages.length; i += 1) {
+        const pageElement = targetPages[i];
+        const canvas = await html2canvas(pageElement, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: "#ffffff",
+          scrollX: 0,
+          scrollY: 0,
+          windowWidth: 1440,
+        });
+        const imgData = canvas.toDataURL("image/jpeg", 1);
+        const imgWidth = pdfWidth;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+        pdf.addImage(imgData, "JPEG", 0, 0, imgWidth, Math.min(imgHeight, pdfHeight));
+        if (i < targetPages.length - 1) {
+          pdf.addPage();
+        }
       }
 
-      await worker.save();
+      pdf.save(`Invoice-${billRecord.billNumber}.pdf`);
     } finally {
       invoiceElement.classList.remove("invoice-export-desktop");
     }
